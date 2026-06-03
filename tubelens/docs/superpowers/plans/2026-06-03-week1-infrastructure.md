@@ -41,6 +41,7 @@ tubelens/                          ← Next.js app root
 ## Task 1: Initialize Next.js Project (TUB-INFRA-001)
 
 **Files:**
+
 - Create: `tubelens/` (entire Next.js project)
 - Create: `tubelens/.env.example`
 
@@ -58,6 +59,7 @@ npx create-next-app@14 tubelens \
 ```
 
 When prompted:
+
 - "Would you like to use ESLint?" → No (we configure manually next)
 - All others → accept defaults
 
@@ -130,6 +132,7 @@ git push -u origin main
 ## Task 2: Configure ESLint + Prettier + Husky (TUB-INFRA-002)
 
 **Files:**
+
 - Create: `tubelens/.eslintrc.json`
 - Create: `tubelens/.prettierrc`
 - Modify: `tubelens/package.json`
@@ -147,11 +150,7 @@ Create `tubelens/.eslintrc.json`:
 
 ```json
 {
-  "extends": [
-    "next/core-web-vitals",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
-  ],
+  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
@@ -226,6 +225,7 @@ git push
 ## Task 3: Install shadcn/ui (TUB-INFRA-003)
 
 **Files:**
+
 - Create: `tubelens/components.json`
 - Create: `tubelens/src/components/ui/` (auto-generated)
 - Modify: `tubelens/src/app/globals.css`
@@ -239,6 +239,7 @@ npx shadcn@latest init
 ```
 
 When prompted:
+
 - Style → **Default**
 - Base color → **Slate**
 - CSS variables → **Yes**
@@ -288,6 +289,7 @@ git push
 ## Task 4: Create Neon Postgres Database (TUB-INFRA-004)
 
 **Files:**
+
 - Modify: `tubelens/.env.local` (add DATABASE_URL)
 
 This task is mostly done in the browser. No code to write.
@@ -301,6 +303,7 @@ This task is mostly done in the browser. No code to write.
 - [ ] **Step 2: Copy the connection string**
 
 In the Neon dashboard:
+
 1. Click **Connection Details**
 2. Select **Prisma** from the "Connect from" dropdown (gives the correct format)
 3. Copy the `DATABASE_URL`
@@ -327,6 +330,7 @@ Expected: PostgreSQL version info printed. If psql not installed, skip — Prism
 ## Task 5: Install Prisma (TUB-INFRA-005)
 
 **Files:**
+
 - Create: `tubelens/prisma/schema.prisma`
 - Create: `tubelens/src/lib/db.ts`
 - Modify: `tubelens/package.json`
@@ -369,7 +373,7 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export const db =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ['query'],  // 开发时打印所有 SQL 查询，方便调试
+    log: ['query'], // 开发时打印所有 SQL 查询，方便调试
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
@@ -396,6 +400,7 @@ git push
 ## Task 6: Write Complete Prisma Schema (TUB-INFRA-006)
 
 **Files:**
+
 - Modify: `tubelens/prisma/schema.prisma`
 
 - [ ] **Step 1: Replace schema.prisma with full schema**
@@ -636,6 +641,7 @@ npx prisma migrate dev --name init
 ```
 
 Expected output:
+
 ```
 ✔ Generated Prisma Client
 The following migration was created: prisma/migrations/20260603_init/migration.sql
@@ -662,6 +668,7 @@ git push
 ## Task 7: Connect GitHub → Vercel (TUB-INFRA-007)
 
 **Files:**
+
 - No code changes — browser-only setup
 
 - [ ] **Step 1: Create Vercel project**
@@ -699,12 +706,14 @@ Copy the Vercel URL, update the `NEXTAUTH_URL` env var in Vercel settings to mat
 ## Task 8: Configure Vercel Blob (TUB-INFRA-008)
 
 **Files:**
+
 - Modify: `tubelens/.env.local` (add BLOB_READ_WRITE_TOKEN)
 - Modify: `tubelens/package.json` (add @vercel/blob)
 
 - [ ] **Step 1: Create Blob Store in Vercel**
 
 In the Vercel dashboard:
+
 1. Go to your project → **Storage** tab
 2. Click **Create Database** → **Blob**
 3. Name: `tubelens-uploads`
@@ -713,6 +722,7 @@ In the Vercel dashboard:
 - [ ] **Step 2: Copy token to env**
 
 In the Blob store settings, copy `BLOB_READ_WRITE_TOKEN`. Add to:
+
 - `tubelens/.env.local`
 - Vercel project environment variables
 
@@ -754,6 +764,7 @@ git push
 ## Task 9: Install and Configure NextAuth (TUB-AUTH-001)
 
 **Files:**
+
 - Create: `tubelens/src/app/api/auth/[...nextauth]/route.ts`
 - Modify: `tubelens/src/lib/db.ts` → split into `db.ts` + new `auth.ts`
 - Modify: `tubelens/.env.local`
@@ -783,6 +794,7 @@ NEXTAUTH_URL=http://localhost:3000
 - [ ] **Step 3: Add your Google OAuth redirect URI**
 
 In Google Cloud Console → your existing OAuth credentials → Authorized redirect URIs, add:
+
 ```
 http://localhost:3000/api/auth/callback/google
 https://your-project.vercel.app/api/auth/callback/google
@@ -821,7 +833,7 @@ const handler = NextAuth({
     },
   },
   pages: {
-    signIn: '/login',  // 自定义登录页路径
+    signIn: '/login', // 自定义登录页路径
   },
 });
 
@@ -912,6 +924,7 @@ git push
 ## Task 10: Login Page (TUB-AUTH-002)
 
 **Files:**
+
 - Create: `tubelens/src/app/login/page.tsx`
 
 - [ ] **Step 1: Create the login page**
@@ -938,9 +951,7 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm space-y-6 p-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold">Tubelens</h1>
-          <p className="text-muted-foreground">
-            Understand your YouTube habits
-          </p>
+          <p className="text-muted-foreground">Understand your YouTube habits</p>
         </div>
         <LoginButton />
         <p className="text-center text-xs text-muted-foreground">
@@ -962,10 +973,7 @@ import { Button } from '@/components/ui/button';
 
 export function LoginButton() {
   return (
-    <Button
-      className="w-full"
-      onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-    >
+    <Button className="w-full" onClick={() => signIn('google', { callbackUrl: '/dashboard' })}>
       Continue with Google
     </Button>
   );
@@ -993,6 +1001,7 @@ git push
 ## Task 11: Route Protection Middleware (TUB-AUTH-003)
 
 **Files:**
+
 - Create: `tubelens/src/middleware.ts`
 
 - [ ] **Step 1: Create middleware**
@@ -1053,6 +1062,7 @@ git push
 ## Task 12: API Auth Utility (TUB-AUTH-004)
 
 **Files:**
+
 - Create: `tubelens/src/lib/auth.ts`
 
 - [ ] **Step 1: Create requireUser helper**
@@ -1116,6 +1126,7 @@ git push
 ## Week 1 Done ✅
 
 At the end of Week 1 you will have:
+
 - A deployed Next.js app on Vercel
 - A Postgres database with 14 tables
 - Google OAuth login working
