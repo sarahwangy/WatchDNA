@@ -5,3 +5,240 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ==================== 用户相关 ====================
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  image             String?
+  createdAt         DateTime @default(now())
+  driveConnected    Boolean  @default(false)
+  driveRefreshToken String?  // V2 自动同步用，V1 暂时用不到
+
+  // NextAuth 需要的关联表
+  accounts      Account[]
+  sessions      Session[]
+
+  // 业务数据关联
+  takeoutFiles  TakeoutFile[]
+  subscriptions Subscription[]
+  watchEvents   WatchEvent[]
+  searchEvents  SearchEvent[]
+  comments      Comment[]
+  likedVideos   LikedVideo[]
+  playlists     Playlist[]
+  insights      Insight[]
+}
+
+// NextAuth 标准表 — 不要修改字段名，NextAuth 内部依赖这些名字
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== 数据导入 ====================
+
+// 每次用户上传的 Takeout zip 文件记录
+model TakeoutFile {
+  id           String    @id @default(cuid())
+  userId       String
+  source       String    // 'manual_upload' | 'drive_sync'
+  driveFileId  String?   // V2 Drive 自动同步时用
+  fileName     String
+  fileSize     BigInt
+  blobUrl      String?   // 文件存在 Vercel Blob 的 URL
+  uploadedAt   DateTime  @default(now())
+  processedAt  DateTime?
+  status       String    // 'pending' | 'processing' | 'completed' | 'failed'
+  errorMessage String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+}
+
+// ==================== 频道与视频 ====================
+
+// Channel 表是多用户共享的 — 同一个 YouTube 频道不会重复存储
+// 所有用户的订阅都指向同一个 Channel 记录，节省 API 调用
+model Channel {
+  id              String    @id  // YouTube Channel ID，格式：UCxxxxxx
+  title           String
+  description     String?
+  country         String?   // ISO 3166 国家代码，如 "US", "JP"
+  customUrl       String?
+  thumbnailUrl    String?
+  subscriberCount BigInt?
+  videoCount      Int?
+  viewCount       BigInt?
+  publishedAt     DateTime?
+  topicCategories String[]  // YouTube 官方主题分类 ID 列表
+  enrichedAt      DateTime? // 最后一次调用 YouTube API 富化的时间
+
+  // AI 生成的分类字段（与 YouTube 官方分类分开存储）
+  aiCategory String?  // 如 "Tech", "Music", "Gaming"
+  aiTags     String[] // 如 ["programming", "tutorials", "react"]
+
+  subscriptions Subscription[]
+  watchEvents   WatchEvent[]
+  videos        Video[]
+
+  @@index([country])
+  @@index([aiCategory])
+}
+
+model Video {
+  id              String    @id  // YouTube Video ID，格式：xxxxxxxxxxx
+  title           String
+  channelId       String?
+  durationSeconds Int?
+  publishedAt     DateTime?
+  thumbnailUrl    String?
+
+  channel     Channel?     @relation(fields: [channelId], references: [id])
+  watchEvents WatchEvent[]
+  comments    Comment[]
+  likedVideos LikedVideo[]
+
+  @@index([channelId])
+}
+
+// ==================== 用户行为数据 ====================
+
+model Subscription {
+  id           String    @id @default(cuid())
+  userId       String
+  channelId    String
+  subscribedAt DateTime? // 来自 CSV，部分 Takeout 版本没有这个字段
+
+  user    User    @relation(fields: [userId], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id])
+
+  @@unique([userId, channelId]) // 同一用户不能重复订阅同一频道
+  @@index([userId])
+}
+
+model WatchEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  videoId    String?  // 可能为空：视频已被删除时仍保留观看记录
+  channelId  String?
+  videoTitle String   // 冗余存储标题：即使视频删除，标题还在
+  watchedAt  DateTime
+
+  user    User     @relation(fields: [userId], references: [id])
+  video   Video?   @relation(fields: [videoId], references: [id])
+  channel Channel? @relation(fields: [channelId], references: [id])
+
+  // 复合索引：时间序列查询（热力图）和按频道查询都是热点
+  @@index([userId, watchedAt])
+  @@index([userId, channelId])
+}
+
+model SearchEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  query      String
+  searchedAt DateTime
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, searchedAt])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  userId      String
+  videoId     String?
+  content     String
+  commentedAt DateTime
+
+  user  User   @relation(fields: [userId], references: [id])
+  video Video? @relation(fields: [videoId], references: [id])
+
+  @@index([userId])
+}
+
+model LikedVideo {
+  id      String   @id @default(cuid())
+  userId  String
+  videoId String
+  likedAt DateTime
+
+  user  User  @relation(fields: [userId], references: [id])
+  video Video @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId]) // 同一视频不能重复点赞
+}
+
+// ==================== 播放列表 ====================
+
+model Playlist {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime
+
+  user  User           @relation(fields: [userId], references: [id])
+  items PlaylistItem[]
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  videoId    String?
+  videoTitle String   // 同样冗余存储标题
+  addedAt    DateTime
+
+  playlist Playlist @relation(fields: [playlistId], references: [id])
+}
+
+// ==================== AI 分析结果 ====================
+
+// AI 生成的报告作为快照保存，避免每次打开页面都重新调用 Claude
+model Insight {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String    // 'viewer_profile' | 'interest_shift' | 'unsubscribe_suggestion' | 'period_summary'
+  content     String    @db.Text // 长文本，用 @db.Text 存储
+  metadata    Json?     // 附加结构化数据，如推荐频道列表
+  generatedAt DateTime  @default(now())
+  validUntil  DateTime? // 过期时间，过期后重新生成
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, type])
+}
