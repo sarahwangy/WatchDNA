@@ -2,7 +2,7 @@
 // getServerSession 在服务端检查登录状态，比客户端 useSession 更快
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-options';
 import { LoginButton } from '@/components/auth/login-button';
 
 export default async function LoginPage() {
