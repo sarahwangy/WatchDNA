@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tubelens – Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0F0F;
+      --card: #1A1A1A;
+      --border: #272727;
+      --red: #FF0000;
+      --red-dim: rgba(255,0,0,0.12);
+      --text: #FFFFFF;
+      --muted: #AAAAAA;
+      --sidebar-w: 240px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-logo .dot {
+      width: 12px; height: 12px;
+      background: var(--red);
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px var(--red);
+    }
+
+    .nav {
+      padding: 16px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .nav-item.active {
+      background: var(--red-dim);
+      color: var(--red);
+      font-weight: 600;
+    }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .sidebar-user {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF0000 0%, #880000 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logout-btn {
+      background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px;
+      border-radius: 4px; display: flex; align-items: center;
+    }
+    .logout-btn:hover { color: var(--text); }
+
+    /* ── Main ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 32px 36px;
+      max-width: calc(100vw - var(--sidebar-w));
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; }
+    .last-updated { font-size: 12px; color: var(--muted); }
+    .last-updated span { color: var(--text); }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--red);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .kpi-card:hover::after { opacity: 1; }
+    .kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .kpi-unit { font-size: 14px; color: var(--muted); font-weight: 400; }
+    .kpi-delta { font-size: 12px; color: #4ade80; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+    .kpi-icon {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 36px; height: 36px;
+      background: var(--red-dim);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi-icon svg { width: 18px; height: 18px; color: var(--red); }
+
+    /* ── Section ── */
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .badge {
+      font-size: 11px;
+      background: var(--red-dim);
+      color: var(--red);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* ── Heatmap ── */
+    .heatmap-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .heatmap-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .heatmap-legend {
+      display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted);
+    }
+    .legend-cells { display: flex; gap: 3px; }
+    .legend-cell { width: 11px; height: 11px; border-radius: 2px; }
+
+    .heatmap-months {
+      display: flex;
+      gap: 0;
+      margin-bottom: 6px;
+      padding-left: 24px;
+    }
+    .month-label {
+      font-size: 10px;
+      color: var(--muted);
+      flex: 1;
+      text-align: left;
+    }
+
+    .heatmap-body { display: flex; gap: 6px; }
+    .heatmap-days {
+      display: flex; flex-direction: column; gap: 3px; padding-top: 1px;
+    }
+    .day-label { font-size: 10px; color: var(--muted); height: 11px; line-height: 11px; width: 18px; text-align: right; }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-rows: repeat(7, 11px);
+      grid-auto-flow: column;
+      gap: 3px;
+      flex: 1;
+    }
+    .heatmap-cell {
+      width: 11px; height: 11px;
+      border-radius: 2px;
+      cursor: default;
+    }
+    .h0 { background: #1a1a1a; border: 1px solid #272727; }
+    .h1 { background: #4d0000; }
+    .h2 { background: #800000; }
+    .h3 { background: #b30000; }
+    .h4 { background: #FF0000; }
+
+    /* ── Two-col ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* ── Top Channels ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .channel-list { display: flex; flex-direction: column; gap: 14px; }
+    .channel-item { display: flex; flex-direction: column; gap: 6px; }
+    .channel-meta { display: flex; align-items: center; justify-content: space-between; }
+    .channel-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--muted);
+      width: 18px;
+    }
+    .channel-name { font-weight: 500; font-size: 13px; flex: 1; margin-left: 8px; }
+    .channel-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .channel-bar-bg {
+      background: var(--bg);
+      border-radius: 2px;
+      height: 4px;
+      overflow: hidden;
+      margin-left: 26px;
+    }
+    .channel-bar { height: 4px; background: var(--red); border-radius: 2px; }
+
+    /* ── Map placeholder ── */
+    .map-placeholder {
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      gap: 10px;
+      color: var(--muted);
+    }
+    .map-placeholder svg { width: 40px; height: 40px; opacity: 0.4; }
+    .map-placeholder p { font-size: 13px; }
+    .map-placeholder small { font-size: 11px; opacity: 0.6; }
+
+    /* continent pills */
+    .region-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #222;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .pill .dot-sm { width: 6px; height: 6px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+<!-- ══ Sidebar ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="dot"></span>
+    Tubelens
+  </div>
+
+  <nav class="nav">
+    <a class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Subscriptions
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Watching
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Insights
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="avatar">S</div>
+    <div class="user-info">
+      <div class="user-name">Sarah W.</div>
+      <div class="user-email">sarahwangdk@gmail.com</div>
+    </div>
+    <button class="logout-btn" title="Sign out">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ══ Main ══ -->
+<main class="main">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="last-updated">Last synced: <span>Jun 3, 2026 · 09:14 AM</span></div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="kpi-label">Total Subscriptions</div>
+      <div class="kpi-value">847</div>
+      <div class="kpi-unit">channels</div>
+      <div class="kpi-delta">↑ 23 this month</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <div class="kpi-label">Total Watch Events</div>
+      <div class="kpi-value">23,491</div>
+      <div class="kpi-unit">videos watched</div>
+      <div class="kpi-delta">↑ 412 this month</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="kpi-label">Total Watch Time</div>
+      <div class="kpi-value">1,240<span style="font-size:18px;color:var(--muted)"> h</span></div>
+      <div class="kpi-unit">hours</div>
+      <div class="kpi-delta">↑ 38h this month</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="kpi-label">Active Days</div>
+      <div class="kpi-value">312</div>
+      <div class="kpi-unit">days of data</div>
+      <div class="kpi-delta">85% activity rate</div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="heatmap-section">
+    <div class="heatmap-header">
+      <div class="section-title" style="margin-bottom:0">
+        Watch Activity
+        <span class="badge">Past Year</span>
+      </div>
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <div class="legend-cells">
+          <div class="legend-cell h0"></div>
+          <div class="legend-cell h1"></div>
+          <div class="legend-cell h2"></div>
+          <div class="legend-cell h3"></div>
+          <div class="legend-cell h4"></div>
+        </div>
+        <span>More</span>
+      </div>
+    </div>
+
+    <!-- Month labels -->
+    <div style="display:flex; padding-left:24px; margin-bottom:6px;">
+      <div style="font-size:10px;color:var(--muted);flex:1">Jun</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Jul</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Aug</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Sep</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Oct</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Nov</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Dec</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Jan</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Feb</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Mar</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">Apr</div>
+      <div style="font-size:10px;color:var(--muted);flex:1">May</div>
+    </div>
+
+    <div class="heatmap-body">
+      <div class="heatmap-days">
+        <div class="day-label"></div>
+        <div class="day-label" style="color:var(--muted)">M</div>
+        <div class="day-label"></div>
+        <div class="day-label" style="color:var(--muted)">W</div>
+        <div class="day-label"></div>
+        <div class="day-label" style="color:var(--muted)">F</div>
+        <div class="day-label"></div>
+      </div>
+      <div class="heatmap-grid" id="heatmap"></div>
+    </div>
+  </div>
+
+  <!-- Two-col: Top Channels + Map -->
+  <div class="two-col">
+
+    <!-- Top Channels -->
+    <div class="card">
+      <div class="section-title">
+        Top Channels
+        <span class="badge">by views</span>
+      </div>
+      <div class="channel-list">
+        <div class="channel-item">
+          <div class="channel-meta">
+            <span class="channel-rank">#1</span>
+            <span class="channel-name">Lex Fridman</span>
+            <span class="channel-count">1,842</span>
+          </div>
+          <div class="channel-bar-bg"><div class="channel-bar" style="width:100%"></div></div>
+        </div>
+        <div class="channel-item">
+          <div class="channel-meta">
+            <span class="channel-rank">#2</span>
+            <span class="channel-name">3Blue1Brown</span>
+            <span class="channel-count">1,204</span>
+          </div>
+          <div class="channel-bar-bg"><div class="channel-bar" style="width:65%"></div></div>
+        </div>
+        <div class="channel-item">
+          <div class="channel-meta">
+            <span class="channel-rank">#3</span>
+            <span class="channel-name">Fireship</span>
+            <span class="channel-count">983</span>
+          </div>
+          <div class="channel-bar-bg"><div class="channel-bar" style="width:53%"></div></div>
+        </div>
+        <div class="channel-item">
+          <div class="channel-meta">
+            <span class="channel-rank">#4</span>
+            <span class="channel-name">Andrej Karpathy</span>
+            <span class="channel-count">761</span>
+          </div>
+          <div class="channel-bar-bg"><div class="channel-bar" style="width:41%"></div></div>
+        </div>
+        <div class="channel-item">
+          <div class="channel-meta">
+            <span class="channel-rank">#5</span>
+            <span class="channel-name">Kurzgesagt</span>
+            <span class="channel-count">634</span>
+          </div>
+          <div class="channel-bar-bg"><div class="channel-bar" style="width:34%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="card">
+      <div class="section-title">订阅来源分布</div>
+      <div class="map-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <p>Subscription Source Distribution</p>
+        <small>World map coming in v1.1</small>
+      </div>
+      <div class="region-pills">
+        <div class="pill"><div class="dot-sm" style="background:#FF0000"></div>US &amp; Canada <strong style="color:var(--text);margin-left:4px">38%</strong></div>
+        <div class="pill"><div class="dot-sm" style="background:#b30000"></div>Europe <strong style="color:var(--text);margin-left:4px">27%</strong></div>
+        <div class="pill"><div class="dot-sm" style="background:#800000"></div>Asia <strong style="color:var(--text);margin-left:4px">21%</strong></div>
+        <div class="pill"><div class="dot-sm" style="background:#4d0000"></div>Other <strong style="color:var(--text);margin-left:4px">14%</strong></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // Generate heatmap data – 53 weeks × 7 days
+  const grid = document.getElementById('heatmap');
+  const total = 53 * 7;
+  // Seed with a simple pattern so it looks realistic
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+    const r = Math.random();
+    // weekends (day 5,6 in each week) more active
+    const dayOfWeek = i % 7;
+    const weekend = dayOfWeek >= 5;
+    const base = weekend ? 0.55 : 0.35;
+    // a few "hot" weeks
+    const week = Math.floor(i / 7);
+    const hotWeek = [8, 22, 35, 48].includes(week);
+    const val = r < (hotWeek ? 0.1 : base + 0.15) ? 0 :
+                r < (hotWeek ? 0.25 : base + 0.3) ? 1 :
+                r < (hotWeek ? 0.5 : base + 0.5) ? 2 :
+                r < (hotWeek ? 0.75 : base + 0.7) ? 3 : 4;
+    cell.classList.add(`h${val}`);
+    grid.appendChild(cell);
+  }
+</script>
+</body>
+</html>

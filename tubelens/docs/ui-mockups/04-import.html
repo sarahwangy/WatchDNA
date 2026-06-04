@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tubelens – Import Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0F0F0F;
+      --card: #1A1A1A;
+      --border: #272727;
+      --red: #FF0000;
+      --red-dim: rgba(255,0,0,0.12);
+      --text: #FFFFFF;
+      --muted: #AAAAAA;
+      --sidebar-w: 240px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-logo .dot { width: 12px; height: 12px; background: var(--red); border-radius: 50%; box-shadow: 0 0 8px var(--red); }
+    .nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px;
+      color: var(--muted); text-decoration: none;
+      font-weight: 500; cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .nav-item.active { background: var(--red-dim); color: var(--red); font-weight: 600; }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-user {
+      padding: 16px 20px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #FF0000 0%, #880000 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logout-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; }
+    .logout-btn:hover { color: var(--text); }
+
+    /* ── Main ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 32px 36px;
+      max-width: 860px;
+    }
+
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .page-subtitle { color: var(--muted); font-size: 14px; }
+
+    /* ── Stepper ── */
+    .stepper {
+      display: flex;
+      align-items: center;
+      margin-bottom: 36px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      gap: 0;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .step-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+      flex-shrink: 0;
+    }
+    .step.done .step-circle { background: var(--red); color: #fff; }
+    .step.active .step-circle { background: var(--red); color: #fff; box-shadow: 0 0 0 4px var(--red-dim); }
+    .step.pending .step-circle { background: #2a2a2a; color: var(--muted); border: 1px solid var(--border); }
+
+    .step-info { flex: 1; }
+    .step-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .step-name { font-size: 13px; font-weight: 600; }
+    .step.pending .step-name { color: var(--muted); }
+
+    .step-connector {
+      height: 1px;
+      width: 40px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+    .step-connector.done { background: var(--red); }
+
+    /* ── Drop Zone ── */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: var(--card);
+      margin-bottom: 20px;
+    }
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--red);
+      background: var(--red-dim);
+    }
+    .dropzone-icon {
+      width: 64px; height: 64px;
+      background: #222;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      border: 1px solid var(--border);
+    }
+    .dropzone-icon svg { width: 28px; height: 28px; color: var(--muted); }
+    .dropzone h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .dropzone p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .browse-btn {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+    .browse-btn:hover { background: #cc0000; }
+
+    .file-hints {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .hint-chip {
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      background: #1e1e1e;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .hint-chip .check { color: #4ade80; }
+
+    /* ── Progress (active state) ── */
+    .progress-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+    .progress-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .progress-file { display: flex; align-items: center; gap: 10px; }
+    .file-icon {
+      width: 36px; height: 36px;
+      background: var(--red-dim);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .file-icon svg { width: 18px; height: 18px; color: var(--red); }
+    .file-details { }
+    .file-name { font-weight: 600; font-size: 13px; }
+    .file-size { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .progress-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--red);
+    }
+
+    .progress-bar-bg {
+      background: var(--bg);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #880000, #FF0000);
+      width: 60%;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { to { left: 200%; } }
+
+    .progress-steps {
+      display: flex;
+      gap: 20px;
+    }
+    .progress-step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+    .ps-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .ps-done { background: #4ade80; }
+    .ps-active { background: var(--red); animation: pulse 1s infinite; }
+    .ps-pending { background: #333; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .ps-label.active { color: var(--text); font-weight: 500; }
+
+    /* ── How-to Guide ── */
+    .guide-title {
+      font-size: 15px; font-weight: 600; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .guide-title .badge {
+      font-size: 11px; background: #1e2a1e; color: #4ade80;
+      padding: 2px 8px; border-radius: 20px; border: 1px solid #2a3d2a;
+    }
+
+    .guide-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .guide-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .guide-thumb {
+      height: 120px;
+      background: #111;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .guide-thumb-inner {
+      text-align: center;
+      color: #333;
+    }
+    .guide-thumb-inner svg { width: 36px; height: 36px; margin-bottom: 6px; display: block; margin-left: auto; margin-right: auto; }
+    .guide-thumb-inner span { font-size: 10px; color: #444; }
+    .guide-step-body { padding: 14px 16px; }
+    .guide-step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--red);
+      font-weight: 700; letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .guide-step-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .guide-step-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* thumbnail mock UIs */
+    .mock-browser {
+      width: 90%; background: #1a1a1a; border-radius: 6px;
+      border: 1px solid #333; overflow: hidden;
+    }
+    .mock-bar { height: 18px; background: #222; display: flex; align-items: center; padding: 0 6px; gap: 4px; }
+    .mock-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .mock-body { padding: 8px; font-size: 8px; color: #555; }
+    .mock-btn { background: #4285f4; color: #fff; border-radius: 3px; padding: 3px 6px; font-size: 7px; display: inline-block; margin-top: 4px; }
+    .mock-zip { width: 44px; height: 56px; background: #2a2a2a; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .mock-zip span { font-size: 8px; font-weight: 700; color: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ══ Sidebar ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="dot"></span>
+    Tubelens
+  </div>
+
+  <nav class="nav">
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Subscriptions
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Watching
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Search
+    </a>
+    <a class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Insights
+    </a>
+    <a class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import Data
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="avatar">S</div>
+    <div class="user-info">
+      <div class="user-name">Sarah W.</div>
+      <div class="user-email">sarahwangdk@gmail.com</div>
+    </div>
+    <button class="logout-btn" title="Sign out">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ══ Main ══ -->
+<main class="main">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">Upload Your Takeout Data</h1>
+    <p class="page-subtitle">Import your Google Takeout archive to unlock your full watch history.</p>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="step done">
+      <div class="step-circle">✓</div>
+      <div class="step-info">
+        <div class="step-label">Step 1 of 3</div>
+        <div class="step-name">How to Export</div>
+      </div>
+    </div>
+    <div class="step-connector done"></div>
+    <div class="step active">
+      <div class="step-circle">2</div>
+      <div class="step-info">
+        <div class="step-label">Step 2 of 3</div>
+        <div class="step-name">Upload</div>
+      </div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step pending">
+      <div class="step-circle">3</div>
+      <div class="step-info">
+        <div class="step-label">Step 3 of 3</div>
+        <div class="step-name">Analyze</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drop Zone -->
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h3>Drag &amp; drop your Takeout ZIP here</h3>
+    <p>or click to browse your files</p>
+    <button class="browse-btn">Browse Files</button>
+  </div>
+
+  <!-- File Hints -->
+  <div class="file-hints">
+    <div class="hint-chip"><span class="check">✓</span> .zip files only</div>
+    <div class="hint-chip"><span class="check">✓</span> Max size: 2 GB</div>
+    <div class="hint-chip"><span class="check">✓</span> Files are processed locally</div>
+    <div class="hint-chip"><span class="check">✓</span> Data never leaves your browser</div>
+  </div>
+
+  <!-- Progress card (processing state) -->
+  <div class="progress-card">
+    <div class="progress-header">
+      <div class="progress-file">
+        <div class="file-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        </div>
+        <div class="file-details">
+          <div class="file-name">takeout-20260601T120000Z-001.zip</div>
+          <div class="file-size">847.3 MB · Uploading…</div>
+        </div>
+      </div>
+      <div class="progress-pct">60%</div>
+    </div>
+
+    <div class="progress-bar-bg">
+      <div class="progress-bar"></div>
+    </div>
+
+    <div class="progress-steps">
+      <div class="progress-step">
+        <div class="ps-dot ps-done"></div>
+        <span class="ps-label">File uploaded</span>
+      </div>
+      <div class="progress-step">
+        <div class="ps-dot ps-done"></div>
+        <span class="ps-label">ZIP extracted</span>
+      </div>
+      <div class="progress-step">
+        <div class="ps-dot ps-active"></div>
+        <span class="ps-label active">Parsing watch history</span>
+      </div>
+      <div class="progress-step">
+        <div class="ps-dot ps-pending"></div>
+        <span class="ps-label">Analyze subscriptions</span>
+      </div>
+      <div class="progress-step">
+        <div class="ps-dot ps-pending"></div>
+        <span class="ps-label">Build insights</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- How-to Guide -->
+  <div class="guide-title">
+    How to get your Google Takeout
+    <span class="badge">3 steps</span>
+  </div>
+
+  <div class="guide-steps">
+
+    <!-- Step 1 -->
+    <div class="guide-step">
+      <div class="guide-thumb">
+        <div class="mock-browser" style="width:86%">
+          <div class="mock-bar">
+            <div class="mock-dot" style="background:#ff5f57"></div>
+            <div class="mock-dot" style="background:#febc2e"></div>
+            <div class="mock-dot" style="background:#28c840"></div>
+          </div>
+          <div class="mock-body">
+            <div style="font-size:7px;color:#555;margin-bottom:4px">takeout.google.com</div>
+            <div style="background:#2a2a2a;border-radius:3px;padding:4px 6px;margin-bottom:4px">
+              <div style="font-size:7px;color:#aaa;margin-bottom:2px">Select data to include</div>
+              <div style="font-size:6px;color:#666">☑ YouTube and YouTube Music</div>
+            </div>
+            <div class="mock-btn">Deselect all → YouTube</div>
+          </div>
+        </div>
+      </div>
+      <div class="guide-step-body">
+        <div class="guide-step-num">STEP 01</div>
+        <div class="guide-step-title">Go to Google Takeout</div>
+        <div class="guide-step-desc">Visit <span style="color:var(--red)">takeout.google.com</span>. Click "Deselect all", then find and check "YouTube and YouTube Music".</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="guide-step">
+      <div class="guide-thumb">
+        <div class="mock-browser" style="width:86%">
+          <div class="mock-bar">
+            <div class="mock-dot" style="background:#ff5f57"></div>
+            <div class="mock-dot" style="background:#febc2e"></div>
+            <div class="mock-dot" style="background:#28c840"></div>
+          </div>
+          <div class="mock-body">
+            <div style="font-size:7px;color:#555;margin-bottom:4px">Export options</div>
+            <div style="display:flex;gap:4px;margin-bottom:4px">
+              <div style="background:#2a2a2a;border-radius:3px;padding:3px 5px;font-size:6px;color:#aaa">Format: .zip</div>
+              <div style="background:#2a2a2a;border-radius:3px;padding:3px 5px;font-size:6px;color:#aaa">Size: 2GB</div>
+            </div>
+            <div class="mock-btn" style="background:#34a853">Create Export</div>
+          </div>
+        </div>
+      </div>
+      <div class="guide-step-body">
+        <div class="guide-step-num">STEP 02</div>
+        <div class="guide-step-title">Configure &amp; Export</div>
+        <div class="guide-step-desc">Choose <strong>ZIP</strong> format and <strong>2GB</strong> file size. Click "Create Export". Google will email you when ready (usually 1–10 min).</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="guide-step">
+      <div class="guide-thumb">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+          <div class="mock-zip">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            <span>.ZIP</span>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <div style="text-align:center">
+            <div style="width:36px;height:36px;background:var(--red-dim);border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+            </div>
+            <div style="font-size:7px;color:#555;margin-top:3px">Upload</div>
+          </div>
+        </div>
+      </div>
+      <div class="guide-step-body">
+        <div class="guide-step-num">STEP 03</div>
+        <div class="guide-step-title">Upload Here</div>
+        <div class="guide-step-desc">Download the .zip from the email link, then drag it into the upload area above. Processing takes about 30 seconds.</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  // Drag hover effect
+  const dz = document.getElementById('dropzone');
+  ['dragover','dragenter'].forEach(e => dz.addEventListener(e, ev => {
+    ev.preventDefault(); dz.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => {
+    ev.preventDefault(); dz.classList.remove('drag-over');
+  }));
+</script>
+</body>
+</html>

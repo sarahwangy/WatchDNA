@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Tubelens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #FF0000;
+      --bg: #0F0F0F;
+      --card: #1A1A1A;
+      --border: #272727;
+      --border-hover: #3a3a3a;
+      --text: #FFFFFF;
+      --muted: #AAAAAA;
+      --muted-dark: #666;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(255,0,0,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -200px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(100,80,255,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* Subtle grid pattern */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* ── NAV TOP ── */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 8px var(--red); }
+      50% { box-shadow: 0 0 16px rgba(255,0,0,0.7); }
+    }
+
+    .back-link {
+      font-size: 13px;
+      color: var(--muted-dark);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--muted); }
+
+    /* ── CARD ── */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .card-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: -0.8px;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .card-logo .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 10px var(--red);
+    }
+
+    .tagline {
+      font-size: 14px;
+      color: var(--muted-dark);
+      font-style: italic;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .card-sub {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 28px;
+      color: var(--muted-dark);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── GOOGLE BUTTON ── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 20px;
+      background: #fff;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .btn-google:hover {
+      background: #f5f5f5;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+
+    .btn-google:active { transform: translateY(0); }
+
+    .google-icon { flex-shrink: 0; }
+
+    /* ── PRIVACY NOTE ── */
+    .privacy-note {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .privacy-note p {
+      font-size: 12px;
+      color: var(--muted-dark);
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .privacy-note strong { color: var(--muted); font-weight: 500; }
+
+    .privacy-icons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 12px;
+    }
+
+    .privacy-icon-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--muted-dark);
+    }
+
+    .green-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
+
+    /* ── LEGAL LINKS ── */
+    .legal {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted-dark);
+      line-height: 1.8;
+    }
+
+    .legal a {
+      color: var(--muted-dark);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.15s;
+    }
+    .legal a:hover { color: var(--muted); }
+
+    /* ── DEMO NOTE BELOW CARD ── */
+    .demo-note {
+      position: relative;
+      z-index: 1;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .demo-note p {
+      font-size: 13px;
+      color: var(--muted-dark);
+    }
+
+    .demo-note a {
+      color: var(--red);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .demo-note a:hover { text-decoration: underline; }
+
+    /* ── DECORATIVE STATS (subtle) ── */
+    .floating-stat {
+      position: fixed;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.08);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .f1 { top: 22%; left: 8%; }
+    .f2 { top: 35%; right: 8%; }
+    .f3 { bottom: 30%; left: 6%; }
+    .f4 { bottom: 20%; right: 9%; }
+
+    @media (max-width: 480px) {
+      .card { margin: 0 16px; padding: 36px 28px; }
+      .floating-stat { display: none; }
+      .top-bar { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+
+  <!-- Floating ambient stats -->
+  <div class="floating-stat f1">
+    watch_time: 347h 22m<br/>
+    top_channel: Fireship<br/>
+    peak_hour: 23:14
+  </div>
+  <div class="floating-stat f2">
+    loyalty_score: 0.38<br/>
+    categories: 12<br/>
+    rabbit_holes: 47
+  </div>
+  <div class="floating-stat f3">
+    videos_total: 4,891<br/>
+    avg_duration: 14m<br/>
+    rewatched: 312
+  </div>
+  <div class="floating-stat f4">
+    portrait: "deep diver"<br/>
+    binge_nights: 28<br/>
+    mood_arc: ↗ curious
+  </div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <a href="01-landing.html" class="logo">
+      <div class="logo-dot"></div>
+      Tubelens
+    </a>
+    <a href="01-landing.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      Back to home
+    </a>
+  </div>
+
+  <!-- LOGIN CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-logo">
+        <div class="dot"></div>
+        Tubelens
+      </div>
+      <div class="tagline">// know your watch DNA</div>
+      <h1 class="card-title">Welcome back</h1>
+      <p class="card-sub">Sign in to access your watch analysis dashboard and AI portrait.</p>
+    </div>
+
+    <div class="divider">Continue with</div>
+
+    <button class="btn-google">
+      <!-- Google "G" SVG logo -->
+      <svg class="google-icon" width="20" height="20" viewBox="0 0 48 48">
+        <path fill="#4285F4" d="M47.53 24.56c0-1.64-.15-3.22-.42-4.74H24v8.97h13.19c-.57 3.01-2.28 5.56-4.86 7.27v6.04h7.87c4.6-4.24 7.33-10.48 7.33-17.54z"/>
+        <path fill="#34A853" d="M24 48c6.62 0 12.17-2.2 16.22-5.9l-7.87-6.04c-2.2 1.47-5 2.34-8.35 2.34-6.42 0-11.85-4.33-13.79-10.15H2.1v6.23C6.14 42.64 14.46 48 24 48z"/>
+        <path fill="#FBBC05" d="M10.21 28.25A14.95 14.95 0 0 1 9.25 24c0-1.48.25-2.91.96-4.25v-6.23H2.1A23.97 23.97 0 0 0 0 24c0 3.87.93 7.54 2.1 10.48l8.11-6.23z"/>
+        <path fill="#EA4335" d="M24 9.6c3.62 0 6.87 1.24 9.43 3.68l7.07-7.07C36.17 2.38 30.62 0 24 0 14.46 0 6.14 5.36 2.1 13.52l8.11 6.23C12.15 13.93 17.58 9.6 24 9.6z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <!-- Privacy note -->
+    <div class="privacy-note">
+      <p>
+        We only request access to your <strong>Google profile</strong> (name + email) for authentication. We <strong>never</strong> access your YouTube account, viewing history, or subscriptions via OAuth.
+      </p>
+      <div class="privacy-icons">
+        <span class="privacy-icon-item"><span class="green-dot"></span>No YouTube access</span>
+        <span class="privacy-icon-item"><span class="green-dot"></span>No watch history read</span>
+        <span class="privacy-icon-item"><span class="green-dot"></span>Profile only</span>
+      </div>
+    </div>
+
+    <p class="legal">
+      By continuing, you agree to our <a href="#">Terms of Service</a><br/>
+      and <a href="#">Privacy Policy</a>. Data deleted on request.
+    </p>
+  </div>
+
+  <!-- DEMO LINK -->
+  <div class="demo-note">
+    <p>Just exploring? <a href="#">Try the demo without signing in →</a></p>
+  </div>
+
+</body>
+</html>

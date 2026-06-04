@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tubelens — Know Your Watch DNA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #FF0000;
+      --red-dim: #CC0000;
+      --bg: #0F0F0F;
+      --card: #1A1A1A;
+      --border: #272727;
+      --text: #FFFFFF;
+      --muted: #AAAAAA;
+      --accent-glow: rgba(255, 0, 0, 0.15);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(15, 15, 15, 0.92);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .nav-logo .dot {
+      width: 10px;
+      height: 10px;
+      background: var(--red);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--red);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 8px var(--red); }
+      50% { box-shadow: 0 0 16px var(--red); }
+    }
+
+    .nav-actions { display: flex; gap: 12px; align-items: center; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      border: none;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: #444; background: #1f1f1f; }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--red-dim); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,0,0,0.3); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 48px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(255,0,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--red);
+      border: 1px solid rgba(255,0,0,0.3);
+      background: rgba(255,0,0,0.07);
+      margin-bottom: 28px;
+    }
+
+    .hero-badge span { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #FF0000 0%, #FF6B6B 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 64px;
+    }
+
+    .btn-large { padding: 14px 28px; font-size: 15px; border-radius: 10px; }
+
+    /* ── STATS TICKER ── */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 0 48px;
+    }
+
+    .stat-item { text-align: center; }
+
+    .stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+      display: block;
+    }
+
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── FEATURES ── */
+    .section { padding: 80px 48px; max-width: 1100px; margin: 0 auto; }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 500px;
+      margin-bottom: 56px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--red), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .feature-card:hover { border-color: #333; transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: rgba(255,0,0,0.1);
+      color: #FF6B6B;
+      border: 1px solid rgba(255,0,0,0.2);
+    }
+
+    /* ── MOCKUP PREVIEW ── */
+    .preview-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 60px 48px;
+      position: relative;
+    }
+
+    .preview-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+      background: #111;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preview-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    .preview-inner {
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    .mini-card {
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .mini-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-weight: 500; letter-spacing: 0.5px; }
+
+    .mini-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .mini-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .mini-bar {
+      margin-top: 16px;
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .mini-fill { height: 100%; border-radius: 2px; background: var(--red); }
+
+    .heatmap {
+      grid-column: span 2;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 3px;
+      margin-top: 14px;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(16.6% + 28px);
+      right: calc(16.6% + 28px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), var(--red), var(--border));
+    }
+
+    .step { padding: 0 32px; text-align: center; }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 auto 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step:first-child .step-num { border-color: var(--red); color: var(--red); }
+
+    .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    .step-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+
+    /* ── PRIVACY BANNER ── */
+    .privacy-banner {
+      margin: 0 48px 80px;
+      background: linear-gradient(135deg, #111 0%, #1A1A1A 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 48px;
+      display: flex;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .privacy-icon { font-size: 48px; flex-shrink: 0; }
+
+    .privacy-text h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .privacy-text p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+    .privacy-pills {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 5px 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    .footer-links { display: flex; gap: 24px; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .hero { padding: 60px 20px 40px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .preview-inner { grid-template-columns: 1fr; }
+      .heatmap { grid-column: span 1; }
+      .stats-row { margin: 0 20px; gap: 24px; }
+      .privacy-banner { flex-direction: column; margin: 0 20px 40px; }
+      footer { flex-direction: column; gap: 20px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="dot"></div>
+      Tubelens
+    </a>
+    <div class="nav-actions">
+      <a href="#" class="btn btn-ghost">Try Demo</a>
+      <a href="02-login.html" class="btn btn-primary">Sign In</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span>✦ NEW</span>
+      AI-powered YouTube watch analysis is here
+    </div>
+    <h1>You watch <em>differently</em><br />than you think you do.</h1>
+    <p class="hero-sub">
+      Upload your Google Takeout data and discover your real watching patterns — not the algorithm's version of you. Heatmaps, creator loyalty scores, and an AI portrait that actually makes sense.
+    </p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary btn-large">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        View Demo
+      </a>
+      <a href="#" class="btn btn-ghost btn-large">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Upload Your Data
+      </a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <span class="stat-num">4,891</span>
+      <div class="stat-label">Avg. videos watched / year</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">312h</span>
+      <div class="stat-label">Avg. watch time / year</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">23%</span>
+      <div class="stat-label">Videos from subscribed channels</div>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">2:47 AM</span>
+      <div class="stat-label">Peak late-night watch time</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PREVIEW -->
+  <div class="preview-wrap">
+    <div class="preview-bar">
+      <div class="preview-dot" style="background:#FF5F56"></div>
+      <div class="preview-dot" style="background:#FFBD2E"></div>
+      <div class="preview-dot" style="background:#27C93F"></div>
+      <span style="font-size:12px;color:#555;margin-left:12px;font-family:'JetBrains Mono',monospace">tubelens.app/dashboard</span>
+    </div>
+    <div class="preview-inner">
+      <div class="mini-card">
+        <div class="mini-label">TOTAL WATCH TIME</div>
+        <div class="mini-val" style="color:#FF6B6B">347h</div>
+        <div class="mini-sub">↑ 12% vs last year</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:72%"></div></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label">CHANNELS WATCHED</div>
+        <div class="mini-val">1,204</div>
+        <div class="mini-sub">Avg 3.2 visits each</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:45%;background:#818cf8"></div></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label">SUBSCRIPTION LOYALTY</div>
+        <div class="mini-val" style="color:#4ade80">38%</div>
+        <div class="mini-sub">You mostly browse, not subscribe</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:38%;background:#4ade80"></div></div>
+      </div>
+      <div class="heatmap">
+        <div class="mini-label">WATCH ACTIVITY — LAST 52 WEEKS</div>
+        <div class="heatmap-grid" id="heatmap"></div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label">TOP CATEGORY</div>
+        <div class="mini-val" style="font-size:20px;line-height:1.3">Tech &<br />Programming</div>
+        <div class="mini-sub" style="margin-top:8px">61 hours this year</div>
+        <div class="mini-bar" style="margin-top:12px"><div class="mini-fill" style="width:61%;background:#f59e0b"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Your watch history,<br />finally legible.</h2>
+    <p class="section-sub">We parse the raw JSON from your Google Takeout and turn 50,000 data points into three lenses.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3>Subscription vs Reality</h3>
+        <p>See the gap between who you subscribe to and who you actually watch. Most users discover they ignore 70% of their subscriptions — and binge 5 channels they never subscribed to.</p>
+        <span class="feature-tag">loyalty_score: 0.38</span>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🕐</span>
+        <h3>Watch Time Heatmap</h3>
+        <p>A GitHub-style activity grid across 52 weeks and 24 hours. Spot your late-night rabbit holes, weekend binge sessions, and the exact time your productivity collapses daily.</p>
+        <span class="feature-tag">peak_hour: 23:00–01:00</span>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🤖</span>
+        <h3>AI Watch Portrait</h3>
+        <p>Claude reads your patterns and writes a 200-word personal report: your curiosity signature, content mood arc, and what your watch history reveals about how you learn.</p>
+        <span class="feature-tag">model: claude-3-sonnet</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" style="padding-top:0">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Three steps.<br />No setup, no accounts linked.</h2>
+    <p class="section-sub" style="margin-bottom:60px">We never connect to your YouTube account. You control the data, we just read it.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <span class="step-icon">📦</span>
+        <h3>Download Takeout</h3>
+        <p>Go to <strong style="color:#fff">takeout.google.com</strong>, select YouTube data, and download your archive. Takes about 2 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <span class="step-icon">⬆️</span>
+        <h3>Upload Your File</h3>
+        <p>Drop the <code style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#FF6B6B">watch-history.json</code> file here. We parse it locally in your browser — nothing leaves your device unencrypted.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <span class="step-icon">🔍</span>
+        <h3>Read Your Report</h3>
+        <p>Get your full dashboard instantly: heatmaps, category breakdowns, loyalty scores, and an AI-generated portrait of your watch personality.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <div class="privacy-banner">
+    <div class="privacy-icon">🔒</div>
+    <div class="privacy-text">
+      <h3>Your data never leaves without your permission.</h3>
+      <p>
+        Tubelens processes your watch history on-device for initial parsing. We store only aggregated statistics — never raw video IDs or titles. Your Google Takeout file is deleted from our servers within 24 hours of processing. We don't sell data. We don't train models on your history.
+      </p>
+      <div class="privacy-pills">
+        <span class="pill"><span class="pill-dot"></span>No YouTube OAuth required</span>
+        <span class="pill"><span class="pill-dot"></span>Deleted after 24h</span>
+        <span class="pill"><span class="pill-dot"></span>No data reselling</span>
+        <span class="pill"><span class="pill-dot"></span>Open source parser</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red)"></div>
+      <span style="font-weight:600;color:var(--text)">Tubelens</span>
+      <span style="margin-left:4px">— Built for people who watch too much YouTube</span>
+    </div>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">GitHub</a>
+      <a href="#">Twitter</a>
+    </div>
+  </footer>
+
+  <script>
+    // Generate heatmap
+    const grid = document.getElementById('heatmap');
+    const intensities = [];
+    for (let i = 0; i < 24 * 7; i++) {
+      const h = i % 24;
+      let base = 0.05;
+      if (h >= 20 || h <= 1) base = 0.6;
+      else if (h >= 17) base = 0.35;
+      else if (h >= 10 && h <= 14) base = 0.2;
+      intensities.push(Math.min(1, base + Math.random() * 0.4));
+    }
+
+    for (let week = 0; week < 52; week++) {
+      for (let day = 0; day < 7; day++) {
+        const idx = (day * 24 + Math.floor(Math.random() * 24)) % intensities.length;
+        const v = Math.random();
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        const alpha = v < 0.3 ? 0.05 : v < 0.6 ? 0.2 + v * 0.4 : 0.6 + v * 0.4;
+        cell.style.background = v < 0.15 ? '#222' : `rgba(255,0,0,${Math.min(0.9, alpha)})`;
+        grid.appendChild(cell);
+      }
+    }
+  </script>
+</body>
+</html>
