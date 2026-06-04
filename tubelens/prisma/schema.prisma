@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ==================== 用户相关 ====================
@@ -242,3 +243,5 @@ model Insight {
 
   @@index([userId, type])
 }
+
+
