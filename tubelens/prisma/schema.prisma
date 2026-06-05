@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ==================== 用户相关 ====================
@@ -241,6 +240,7 @@ model Insight {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@unique([userId, type])  // upsert 需要复合唯一约束
   @@index([userId, type])
 }
 
