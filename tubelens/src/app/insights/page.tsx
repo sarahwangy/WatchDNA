@@ -1,0 +1,47 @@
+// 这是服务端组件（Server Component）：在服务器上执行，直接查数据库，不暴露给浏览器
+// 行业常用模式：Next.js App Router 中，page.tsx 默认是服务端组件
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/lib/auth-options';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
+import { InsightsClient } from '@/components/insights/insights-client';
+import { db } from '@/lib/db';
+import { getUnsubscribeSuggestions } from '@/lib/ai/generate-insights';
+
+export default async function InsightsPage() {
+  // getServerSession 在服务端获取登录状态，安全，不依赖客户端 cookie 解析
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect('/login');
+
+  // 类型断言：next-auth 默认的 user 类型没有 id 字段，需要手动告诉 TypeScript
+  const userId = (session.user as { id: string }).id;
+
+  // Promise.all 并行发起两个查询，比顺序执行快（行业常用模式）
+  const [insights, unsubscribeSuggestions] = await Promise.all([
+    // 查最新的 AI 洞察记录，按生成时间降序排列
+    db.insight.findMany({ where: { userId }, orderBy: { generatedAt: 'desc' } }),
+    // 查六个月内未观看的订阅频道列表
+    getUnsubscribeSuggestions(userId),
+  ]);
+
+  // 把 insight 数组转成 { type: content } 的 Map，方便按类型取值
+  // Object.fromEntries 是 ES2019 标准方法，把 [key, value] 数组转成对象
+  const insightMap = Object.fromEntries(insights.map((i) => [i.type, i.content]));
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">AI 洞察</h1>
+          <p className="text-zinc-400 text-sm mt-1">由 Claude AI 生成的个性化分析</p>
+        </div>
+        {/* 把服务端数据作为 props 传给客户端组件，这是 Server/Client 组件协作的标准模式 */}
+        <InsightsClient
+          initialProfile={insightMap['viewer_profile'] || null}
+          initialInterestShift={insightMap['interest_shift'] || null}
+          unsubscribeSuggestions={unsubscribeSuggestions}
+        />
+      </div>
+    </DashboardLayout>
+  );
+}
