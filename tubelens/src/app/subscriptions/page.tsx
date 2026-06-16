@@ -8,6 +8,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { CategoryPie } from '@/components/subscriptions/category-pie';
 import { ChannelTable } from '@/components/subscriptions/channel-table';
 import { getSubscriptionsByCategory, getSubscriptionChannels } from '@/lib/queries/subscriptions';
+import { ExportButton } from '@/components/common/export-button';
 
 export default async function SubscriptionsPage() {
   // 服务端获取登录 session：行业常用模式，用于保护需要登录才能访问的页面
@@ -31,11 +32,14 @@ export default async function SubscriptionsPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* 页面标题区：显示订阅总数和从未观看数 */}
-        <div>
-          <h1 className="text-2xl font-bold">订阅分析</h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            {channels.length} 个订阅频道 · {neverWatchedCount} 个从未观看
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Subscription Analysis</h1>
+            <p className="text-zinc-400 text-sm mt-1">
+              {channels.length} subscribed channels · {neverWatchedCount} never watched
+            </p>
+          </div>
+          <ExportButton href="/api/export/subscriptions" label="Export CSV" />
         </div>
 
         {/* 上半部分：饼图 + 快速统计，两列布局 */}
@@ -45,18 +49,18 @@ export default async function SubscriptionsPage() {
 
           {/* 快速统计卡片：用数组 map 渲染，避免重复写相同结构的 JSX */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-            <h3 className="text-sm font-medium text-zinc-400 mb-4">快速统计</h3>
+            <h3 className="text-sm font-medium text-zinc-400 mb-4">Quick Stats</h3>
             <div className="space-y-3">
               {[
-                { label: '总订阅', value: channels.length, color: 'text-white' },
-                { label: '从未观看', value: neverWatchedCount, color: 'text-red-400' },
+                { label: 'Total Subscriptions', value: channels.length, color: 'text-white' },
+                { label: 'Never Watched', value: neverWatchedCount, color: 'text-red-400' },
                 {
-                  label: '活跃频道',
+                  label: 'Active Channels',
                   value: channels.length - neverWatchedCount,
                   color: 'text-green-400',
                 },
                 {
-                  label: '沉默率',
+                  label: 'Silent Rate',
                   // 三元运算符防止除以 0
                   value: `${channels.length > 0 ? Math.round((neverWatchedCount / channels.length) * 100) : 0}%`,
                   color: 'text-zinc-300',

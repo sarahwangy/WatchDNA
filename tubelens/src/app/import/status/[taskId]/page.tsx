@@ -57,10 +57,10 @@ export default function StatusPage({ params }: { params: { taskId: string } }) {
 
   // 每种状态对应的 UI 配置
   const config = {
-    pending: { icon: '⏳', text: '等待处理...', color: 'text-yellow-400' },
-    processing: { icon: '⚙️', text: '正在解析数据...', color: 'text-blue-400' },
-    completed: { icon: '✅', text: '分析完成！即将跳转...', color: 'text-green-400' },
-    failed: { icon: '❌', text: '处理失败', color: 'text-red-400' },
+    pending: { icon: '⏳', text: 'Waiting to process...', color: 'text-yellow-400' },
+    processing: { icon: '⚙️', text: 'Parsing data...', color: 'text-blue-400' },
+    completed: { icon: '✅', text: 'Analysis complete! Redirecting...', color: 'text-green-400' },
+    failed: { icon: '❌', text: 'Processing failed', color: 'text-red-400' },
   };
 
   // task 还没加载到时，默认显示 pending 状态
@@ -81,12 +81,12 @@ export default function StatusPage({ params }: { params: { taskId: string } }) {
         {/* 失败状态：显示错误信息和重试按钮 */}
         {task?.status === 'failed' && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mt-4">
-            <p className="text-red-400 text-sm">{task.errorMessage || '未知错误'}</p>
+            <p className="text-red-400 text-sm">{task.errorMessage || 'Unknown error'}</p>
             <button
               onClick={() => router.push('/import')}
               className="mt-3 text-sm text-white bg-red-600 px-4 py-2 rounded-lg hover:bg-red-700"
             >
-              重新上传
+              Upload Again
             </button>
           </div>
         )}

@@ -57,25 +57,23 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* 用户信息 + 登出：固定在侧边栏底部 */}
+      {/* User info + sign out */}
       <div className="px-4 py-4 border-t border-zinc-800">
         {session?.user && (
           <div className="flex items-center gap-3 mb-3">
-            {session.user.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={session.user.image} alt="avatar" className="w-7 h-7 rounded-full" />
-            )}
-            <div className="flex-1 min-w-0">
-              {/* truncate：文字超出时显示省略号，防止长名字撑坏布局 */}
-              <p className="text-xs text-white truncate">{session.user.name}</p>
-              <p className="text-xs text-zinc-500 truncate">{session.user.email}</p>
+            {/* Letter avatar: first letter of name on colored background */}
+            <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-bold text-white">
+                {session.user.name?.charAt(0).toUpperCase() ?? '?'}
+              </span>
             </div>
+            <p className="text-xs text-white truncate">{session.user.name}</p>
           </div>
         )}
-        {/* signOut：next-auth 提供的登出函数，callbackUrl 指定登出后跳转页面 */}
         <button
+          type="button"
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="w-full text-left text-xs text-zinc-500 hover:text-white px-2 py-1 rounded transition-colors"
+          className="w-full text-left text-xs text-zinc-500 hover:text-white hover:bg-zinc-800 px-2 py-1.5 rounded-md transition-colors"
         >
           Sign out →
         </button>

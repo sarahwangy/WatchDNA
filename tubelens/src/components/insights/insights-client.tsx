@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ViewerProfile } from './viewer-profile';
 import { UnsubscribeList } from './unsubscribe-list';
+import { Recommendations } from './recommendations';
 
 interface InsightsClientProps {
   initialProfile: string | null;
@@ -48,6 +49,7 @@ export function InsightsClient({
         interestShift={interestShift}
         onRegenerate={handleRegenerate}
       />
+      <Recommendations initialContent={null} />
       <UnsubscribeList channels={unsubscribeSuggestions} />
     </div>
   );

@@ -9,11 +9,12 @@ datasource db {
 // ==================== 用户相关 ====================
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
+  id                String    @id @default(cuid())
+  email             String    @unique
+  emailVerified     DateTime? // NextAuth 必须有这个字段
   name              String?
   image             String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime  @default(now())
   driveConnected    Boolean  @default(false)
   driveRefreshToken String?  // V2 自动同步用，V1 暂时用不到
 
@@ -163,7 +164,7 @@ model WatchEvent {
   video   Video?   @relation(fields: [videoId], references: [id])
   channel Channel? @relation(fields: [channelId], references: [id])
 
-  // 复合索引：时间序列查询（热力图）和按频道查询都是热点
+  @@unique([userId, videoId, watchedAt]) // 防止重复导入同一条记录
   @@index([userId, watchedAt])
   @@index([userId, channelId])
 }

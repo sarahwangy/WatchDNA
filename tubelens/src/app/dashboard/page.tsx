@@ -5,6 +5,8 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { KpiCards } from '@/components/dashboard/kpi-cards';
 import { CalendarHeatmap } from '@/components/dashboard/calendar-heatmap';
 import { getDashboardStats, getTopChannels } from '@/lib/queries/dashboard';
+import { getStreakData } from '@/lib/queries/streak';
+import { StreakCard } from '@/components/dashboard/streak-card';
 
 export default async function DashboardPage() {
   // 服务端检查登录状态，未登录直接跳转到登录页
@@ -16,9 +18,10 @@ export default async function DashboardPage() {
 
   // Server Component 直接查数据库，无需 API 调用
   // Promise.all 并行发起两个查询，比串行更快
-  const [stats, topChannels] = await Promise.all([
+  const [stats, topChannels, streak] = await Promise.all([
     getDashboardStats(userId),
     getTopChannels(userId, 5),
+    getStreakData(userId),
   ]);
 
   return (
@@ -27,7 +30,7 @@ export default async function DashboardPage() {
         {/* 页面标题区域 */}
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-zinc-400 text-sm mt-1">你的 YouTube 观看概览</p>
+          <p className="text-zinc-400 text-sm mt-1">Your YouTube watching overview</p>
         </div>
 
         {/* KPI 卡片：订阅数、观看次数、活跃天数 */}
@@ -37,13 +40,22 @@ export default async function DashboardPage() {
           activeDays={stats.activeDays}
         />
 
+        {/* Streak 统计：当前连续天数 + 历史最长 */}
+        <StreakCard
+          currentStreak={streak.currentStreak}
+          longestStreak={streak.longestStreak}
+          longestStreakEnd={streak.longestStreakEnd}
+        />
+
         {/* 日历热力图：按天展示观看频率 */}
         <CalendarHeatmap data={stats.watchByDay} />
 
         {/* Top 频道排行榜，仅在有数据时显示 */}
         {topChannels.length > 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-            <h3 className="text-sm font-medium text-zinc-400 mb-4">Top 频道（观看次数）</h3>
+            <h3 className="text-sm font-medium text-zinc-400 mb-4">
+              Top Channels (by watch count)
+            </h3>
             <div className="space-y-3">
               {topChannels.map((item, i) => (
                 <div key={item.channelId} className="flex items-center gap-3">
@@ -69,13 +81,15 @@ export default async function DashboardPage() {
         {stats.watchEventCount === 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
             <div className="text-4xl mb-3">📦</div>
-            <p className="text-white font-medium mb-2">还没有数据</p>
-            <p className="text-zinc-400 text-sm mb-4">上传你的 Google Takeout ZIP 文件开始分析</p>
+            <p className="text-white font-medium mb-2">No data yet</p>
+            <p className="text-zinc-400 text-sm mb-4">
+              Upload your Google Takeout ZIP file to start analyzing
+            </p>
             <a
               href="/import"
               className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
             >
-              上传数据 →
+              Upload Data →
             </a>
           </div>
         )}

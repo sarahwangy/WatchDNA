@@ -1,5 +1,6 @@
-// 纯展示组件（无 'use client'）：不需要交互，在服务端渲染即可
-// 这是"行业常用模式"：只展示数据的组件尽量保持为 Server Component，减少客户端 JS 体积
+'use client';
+
+import { useState, useMemo } from 'react';
 
 interface Channel {
   id: string;
@@ -7,66 +8,163 @@ interface Channel {
   thumbnailUrl: string | null;
   country: string | null;
   aiCategory: string | null;
-  subscriberCount: bigint | null; // 数据库 BigInt 类型，JS 中要用 Number() 转换才能格式化
+  subscriberCount: bigint | null;
   watchCount: number;
-  neverWatched: boolean; // 这个项目特有字段：该频道是否从未出现在观看记录里
+  neverWatched: boolean;
 }
 
 interface ChannelTableProps {
   channels: Channel[];
 }
 
+type FilterType = 'all' | 'never' | 'active';
+type SortType = 'name' | 'watches_desc' | 'watches_asc';
+
 export function ChannelTable({ channels }: ChannelTableProps) {
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [sort, setSort] = useState<SortType>('watches_desc');
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    let result = channels;
+
+    // Filter
+    if (filter === 'never') result = result.filter((c) => c.neverWatched);
+    if (filter === 'active') result = result.filter((c) => !c.neverWatched);
+
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((c) => c.title.toLowerCase().includes(q));
+    }
+
+    // Sort
+    if (sort === 'name') result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === 'watches_desc') result = [...result].sort((a, b) => b.watchCount - a.watchCount);
+    if (sort === 'watches_asc') result = [...result].sort((a, b) => a.watchCount - b.watchCount);
+
+    return result;
+  }, [channels, filter, sort, search]);
+
+  const neverCount = channels.filter((c) => c.neverWatched).length;
+  const activeCount = channels.length - neverCount;
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-      {/* 表头：显示总频道数 */}
-      <div className="px-5 py-4 border-b border-zinc-800">
-        <h3 className="text-sm font-medium text-zinc-400">
-          订阅频道列表 <span className="text-zinc-600">({channels.length})</span>
-        </h3>
+      {/* Header with search + controls */}
+      <div className="px-5 py-4 border-b border-zinc-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-zinc-400">
+            Subscribed Channels{' '}
+            <span className="text-zinc-600">
+              ({filtered.length}
+              {filtered.length !== channels.length ? ` of ${channels.length}` : ''})
+            </span>
+          </h3>
+
+          {/* Sort */}
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortType)}
+            title="Sort channels"
+            aria-label="Sort channels"
+            className="text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-lg px-2 py-1 focus:outline-none focus:border-zinc-500"
+          >
+            <option value="watches_desc">Most watched</option>
+            <option value="watches_asc">Least watched</option>
+            <option value="name">A → Z</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Filter pills */}
+          {(
+            [
+              { key: 'all', label: `All (${channels.length})` },
+              { key: 'active', label: `Active (${activeCount})` },
+              { key: 'never', label: `Never watched (${neverCount})` },
+            ] as { key: FilterType; label: string }[]
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilter(key)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                filter === key
+                  ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                  : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+
+          {/* Search */}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search channels..."
+            className="ml-auto text-xs bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-lg px-3 py-1 focus:outline-none focus:border-zinc-500 placeholder-zinc-600 w-40"
+          />
+        </div>
       </div>
 
-      {/* 频道列表：每行是一个频道，用 divide-y 自动加分隔线 */}
+      {/* Channel list */}
       <div className="divide-y divide-zinc-800">
-        {/* slice(0, 50)：只显示前 50 个，避免渲染太多 DOM 节点导致页面卡顿 */}
-        {channels.slice(0, 50).map((ch) => (
+        {filtered.length === 0 && (
+          <div className="px-5 py-8 text-center text-zinc-500 text-sm">
+            No channels match your filter.
+          </div>
+        )}
+        {filtered.map((ch) => (
           <div
             key={ch.id}
             className="flex items-center gap-3 px-5 py-3 hover:bg-zinc-800/50 transition-colors"
           >
-            {/* 频道头像：圆形，有图就显示，没图就显示灰色占位 */}
-            <div className="w-8 h-8 rounded-full bg-zinc-700 overflow-hidden shrink-0">
-              {ch.thumbnailUrl && (
-                // 用原生 img 而不是 Next.js Image，因为外部图片域名不固定（YouTube CDN）
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-full bg-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+              {ch.thumbnailUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={ch.thumbnailUrl} alt={ch.title} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs text-zinc-400 font-bold">{ch.title.charAt(0)}</span>
               )}
             </div>
 
-            {/* 频道名 + 订阅者数：flex-1 让它占满中间空间，min-w-0 配合 truncate 防止文字溢出 */}
+            {/* Name + subscribers — clicking opens YouTube channel */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">{ch.title}</p>
+              <a
+                href={`https://www.youtube.com/channel/${ch.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-white hover:text-red-400 transition-colors truncate block"
+              >
+                {ch.title}
+              </a>
               {ch.subscriberCount && (
                 <p className="text-xs text-zinc-500">
-                  {/* BigInt 不能直接用 toLocaleString，先转 Number */}
-                  {Number(ch.subscriberCount).toLocaleString()} 订阅者
+                  {Number(ch.subscriberCount).toLocaleString()} subscribers
                 </p>
               )}
             </div>
 
-            {/* AI 分类标签：只在有分类时显示 */}
+            {/* AI category badge */}
             {ch.aiCategory && (
               <span className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded shrink-0">
                 {ch.aiCategory}
               </span>
             )}
 
-            {/* 观看状态：从未观看显示红色警告，否则显示观看次数 */}
+            {/* Watch status */}
             {ch.neverWatched ? (
               <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded shrink-0">
-                从未观看
+                Never watched
               </span>
             ) : (
-              <span className="text-xs text-zinc-500 font-mono shrink-0">{ch.watchCount} 次</span>
+              <span className="text-xs text-zinc-500 font-mono shrink-0">
+                {ch.watchCount} views
+              </span>
             )}
           </div>
         ))}

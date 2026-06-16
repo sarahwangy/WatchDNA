@@ -35,4 +35,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Google Service Account key - never commit this
+google-service-account.json
+lovely-shelf-*.json
+
+# Private docs - never commit
+"docs/安全风险分析/"
+"docs/portfolio/*"
+
+# YouTube Takeout data - private, never commit
+.tmp-sync/
+*.zip
+takeout-*/
+
 /src/generated/prisma

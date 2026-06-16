@@ -17,11 +17,11 @@ export default async function LoginPage() {
       <div className="w-full max-w-sm space-y-6 p-8">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Tubelens</h1>
-          <p className="text-sm text-muted-foreground">深入了解你的 YouTube 习惯</p>
+          <p className="text-sm text-muted-foreground">Understand your YouTube habits in depth</p>
         </div>
         <LoginButton />
         <p className="text-center text-xs text-muted-foreground">
-          你的数据保持私密。我们只读取你的 Takeout 导出文件。
+          Your data stays private. We only read your Takeout export file.
         </p>
       </div>
     </main>

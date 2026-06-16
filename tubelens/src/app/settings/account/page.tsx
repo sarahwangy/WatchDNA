@@ -26,8 +26,8 @@ export default async function AccountPage() {
     <DashboardLayout>
       <div className="max-w-lg space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">账号设置</h1>
-          <p className="text-zinc-400 text-sm mt-1">管理你的账号和数据</p>
+          <h1 className="text-2xl font-bold">Account Settings</h1>
+          <p className="text-zinc-400 text-sm mt-1">Manage your account and data</p>
         </div>
         {/* createdAt 是 Date 对象，转成 ISO 字符串再传给 Client Component */}
         {/* 原因：Server/Client 边界不能传 Date 对象，只能传 JSON 序列化的值 */}

@@ -52,7 +52,6 @@ export async function getSubscriptionChannels(userId: string) {
       },
     },
     orderBy: { channel: { title: 'asc' } },
-    take: 100,
   });
 
   // 把订阅数据和观看次数合并，同时标记"从未观看"的频道

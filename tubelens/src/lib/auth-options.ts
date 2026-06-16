@@ -11,6 +11,10 @@ export const authOptions: NextAuthOptions = {
   // PrismaAdapter 让 NextAuth 把用户、session 存到我们的数据库
   // 而不是默认的内存存储（重启就丢失）
   adapter: PrismaAdapter(db) as any,
+  debug: false,
+  // PrismaAdapter 默认用 database session，但 next-auth/middleware 只认 JWT
+  // 所以必须显式指定 jwt，否则 middleware 永远读不到 session → 无限重定向
+  session: { strategy: 'jwt' },
   providers: [
     GoogleProvider({
       // 注意：我们的 .env.local 用的是 AUTH_GOOGLE_ID，不是 GOOGLE_CLIENT_ID
@@ -19,11 +23,15 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    // session callback：把数据库里的 userId 注入到前端可访问的 session 对象
-    // 这样任何页面都能通过 useSession() 或 getServerSession() 拿到当前用户的 ID
-    session({ session, user }) {
-      if (session.user && user) {
-        (session.user as any).id = user.id;
+    // jwt strategy 下：用户首次登录时把 userId 存进 token
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    // session callback：从 token 里把 userId 注入 session，供页面使用
+    session({ session, token }) {
+      if (session.user && token.id) {
+        (session.user as any).id = token.id;
       }
       return session;
     },

@@ -35,7 +35,7 @@ export default async function HomePage() {
       <section className="pt-32 pb-20 px-8 max-w-4xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full text-xs text-zinc-400 mb-8">
           <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-          基于 Google Takeout 数据分析
+          Powered by Google Takeout data
         </div>
         <h1 className="text-5xl font-bold leading-tight mb-6">
           You watch differently
@@ -43,15 +43,15 @@ export default async function HomePage() {
           <span className="text-red-500">than you think you do.</span>
         </h1>
         <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-          上传你的 Google Takeout 数据，Tubelens 帮你看清真实的 YouTube
-          习惯——订阅了什么、真正在看什么、AI 为你生成个人画像。
+          Upload your Google Takeout data and Tubelens reveals your real YouTube habits — what you
+          subscribe to, what you actually watch, and an AI-generated personal profile.
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link
             href="/login"
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-medium transition-colors"
           >
-            上传我的数据 →
+            Upload My Data →
           </Link>
           <a
             href="https://takeout.google.com"
@@ -59,7 +59,7 @@ export default async function HomePage() {
             rel="noopener noreferrer"
             className="text-zinc-400 hover:text-white text-sm underline transition-colors"
           >
-            如何导出 Takeout？
+            How to export Takeout?
           </a>
         </div>
       </section>
@@ -70,18 +70,18 @@ export default async function HomePage() {
           {[
             {
               icon: '📊',
-              title: '订阅 vs 实际观看',
-              desc: '847 个订阅，但 80% 时间只花在 23 个频道上——看清你真正的偏好',
+              title: 'Subscriptions vs. Actual Watching',
+              desc: '847 subscriptions, but 80% of your time goes to just 23 channels — see your true preferences',
             },
             {
               icon: '🕐',
-              title: '观看时段热力图',
-              desc: '你是深夜型还是早鸟型？24h×7d 热力图揭露你的真实习惯',
+              title: 'Watch Time Heatmap',
+              desc: 'Night owl or early bird? A 24h×7d heatmap reveals your real habits',
             },
             {
               icon: '🤖',
-              title: 'AI 个人画像',
-              desc: 'Claude AI 基于你的全量数据，生成专属的 YouTube 观看者画像',
+              title: 'AI Personal Profile',
+              desc: 'Claude AI generates a personalized YouTube viewer profile from your full data',
             },
           ].map((item) => (
             <div
@@ -98,23 +98,23 @@ export default async function HomePage() {
 
       {/* 工作原理：步骤说明 */}
       <section className="py-20 px-8 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-12">三步开始分析</h2>
+        <h2 className="text-2xl font-bold text-center mb-12">Get started in 3 steps</h2>
         <div className="space-y-6">
           {[
             {
               step: '01',
-              title: '导出 Google Takeout',
-              desc: '去 takeout.google.com，选择 YouTube 数据导出为 zip',
+              title: 'Export Google Takeout',
+              desc: 'Go to takeout.google.com, select YouTube data and export as a zip',
             },
             {
               step: '02',
-              title: '上传到 Tubelens',
-              desc: '把下载的 zip 文件拖拽上传，系统自动解析（1-3分钟）',
+              title: 'Upload to Tubelens',
+              desc: 'Drag and drop the downloaded zip — the system parses it automatically (1–3 min)',
             },
             {
               step: '03',
-              title: '查看你的报告',
-              desc: 'Dashboard 展示热力图、排行榜，AI 生成个人画像',
+              title: 'View Your Report',
+              desc: 'Dashboard shows heatmaps and rankings, and AI generates your personal profile',
             },
           ].map((item) => (
             <div key={item.step} className="flex gap-6 items-start">
@@ -134,9 +134,10 @@ export default async function HomePage() {
       <section className="py-12 px-8 max-w-2xl mx-auto text-center">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <span className="text-green-400 text-2xl">🔒</span>
-          <h3 className="font-semibold text-white mt-3 mb-2">你的数据只属于你</h3>
+          <h3 className="font-semibold text-white mt-3 mb-2">Your data belongs to you</h3>
           <p className="text-zinc-400 text-sm">
-            数据存储在你的账号下，不会与任何第三方共享。支持一键删除所有数据。
+            Data is stored under your account and never shared with any third party. You can delete
+            everything with one click.
           </p>
         </div>
       </section>
@@ -144,7 +145,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="py-8 px-8 border-t border-zinc-900 text-center text-zinc-500 text-sm">
         <p>
-          Tubelens · 由 Next.js + Claude AI 构建 ·{' '}
+          Tubelens · Built with Next.js + Claude AI ·{' '}
           <a
             href="https://github.com/sarahwangy/WatchDNA"
             target="_blank"

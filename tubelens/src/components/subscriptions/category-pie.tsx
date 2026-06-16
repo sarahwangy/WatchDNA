@@ -15,14 +15,16 @@ export function CategoryPie({ data }: CategoryPieProps) {
   if (data.length === 0) {
     return (
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-center h-64">
-        <p className="text-zinc-500 text-sm">暂无分类数据（需先完成 AI 分类）</p>
+        <p className="text-zinc-500 text-sm">
+          No category data yet (complete AI classification first)
+        </p>
       </div>
     );
   }
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-      <h3 className="text-sm font-medium text-zinc-400 mb-4">订阅分类分布</h3>
+      <h3 className="text-sm font-medium text-zinc-400 mb-4">Subscription Category Breakdown</h3>
       {/* ResponsiveContainer：让图表自动填满父元素宽度，height 固定 260px */}
       <ResponsiveContainer width="100%" height={260}>
         <PieChart>

@@ -21,11 +21,11 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
     async (file: File) => {
       // 前端校验：只接受 zip，最大 2GB
       if (!file.name.endsWith('.zip')) {
-        setError('请上传 .zip 格式的文件');
+        setError('Please upload a .zip file');
         return;
       }
       if (file.size > 2 * 1024 * 1024 * 1024) {
-        setError('文件大小不能超过 2GB');
+        setError('File size cannot exceed 2GB');
         return;
       }
 
@@ -46,8 +46,8 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
               setProgress(Math.round((e.loaded / e.total) * 100));
             }
           };
-          xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error('上传失败')));
-          xhr.onerror = () => reject(new Error('网络错误'));
+          xhr.onload = () => (xhr.status === 200 ? resolve() : reject(new Error('Upload failed')));
+          xhr.onerror = () => reject(new Error('Network error'));
           xhr.open('PUT', uploadUrl);
           xhr.setRequestHeader('Content-Type', 'application/zip');
           xhr.send(file);
@@ -63,7 +63,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         const { taskId } = await importRes.json();
         onUploadComplete(taskId);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '上传失败，请重试');
+        setError(err instanceof Error ? err.message : 'Upload failed, please try again');
         setState('error');
       }
     },
@@ -110,15 +110,15 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         {state === 'idle' && (
           <>
             <div className="text-4xl mb-4">📦</div>
-            <p className="text-white font-medium mb-1">拖拽 Takeout ZIP 到这里</p>
-            <p className="text-zinc-400 text-sm">或点击选择文件 · 仅接受 .zip · 最大 2GB</p>
+            <p className="text-white font-medium mb-1">Drag your Takeout ZIP here</p>
+            <p className="text-zinc-400 text-sm">or click to select a file · .zip only · max 2GB</p>
           </>
         )}
 
         {state === 'uploading' && (
           <>
             <div className="text-4xl mb-4">⬆️</div>
-            <p className="text-white font-medium mb-3">上传中... {progress}%</p>
+            <p className="text-white font-medium mb-3">Uploading... {progress}%</p>
             {/* 进度条：用内联 style 控制宽度，Tailwind 动态类名不可靠 */}
             <div className="w-full bg-zinc-800 rounded-full h-2">
               <div
@@ -132,8 +132,8 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         {state === 'processing' && (
           <>
             <div className="text-4xl mb-4">⚙️</div>
-            <p className="text-white font-medium">正在解析数据...</p>
-            <p className="text-zinc-400 text-sm mt-1">这可能需要 1-3 分钟</p>
+            <p className="text-white font-medium">Parsing data...</p>
+            <p className="text-zinc-400 text-sm mt-1">This may take 1-3 minutes</p>
           </>
         )}
 
@@ -151,13 +151,13 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                 setError(null);
               }}
             >
-              重试
+              Retry
             </Button>
           </>
         )}
       </div>
       <p className="text-zinc-500 text-xs text-center">
-        你的数据仅用于分析，不会被分享给任何第三方。
+        Your data is used for analysis only and will never be shared with any third party.
       </p>
     </div>
   );
