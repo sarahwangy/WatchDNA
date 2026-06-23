@@ -12,6 +12,12 @@ Upload your Google Takeout export and Tubelens parses, enriches, and analyzes yo
 
 ---
 
+## Why I Built This
+
+I spent hours watching YouTube but had no idea what patterns I had — whether I was binge-watching late at night, which topics I kept coming back to, or whether my subscriptions actually matched what I watched. Google Takeout gives you the raw data but no analysis. Tubelens turns that export into an interactive dashboard with AI insights about your own viewing behaviour.
+
+---
+
 ## 📸 Screenshots
 
 <!-- TODO: Replace with actual screenshots -->
