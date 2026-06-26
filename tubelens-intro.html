@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tubelens — Editorial Tri-Tone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Viewport base ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#3d0f1a;}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;}
+.slide{
+  position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;
+  visibility:hidden;opacity:0;pointer-events:none;
+  transition:opacity .5s cubic-bezier(.16,1,.3,1);
+}
+.slide.active{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+@media (prefers-reduced-motion:reduce){.slide{transition-duration:.01ms!important;}}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;}
+  .deck-viewport{position:static;overflow:visible;}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;
+         pointer-events:auto!important;width:1920px;height:1080px;break-after:page;}
+}
+
+/* ── Editorial Tri-Tone palette ── */
+:root{
+  --pink:   #F2B6C6;
+  --butter: #F2D86A;
+  --burg:   #7A1F35;
+
+  --ff-g: 'Bricolage Grotesque', sans-serif;
+  --ff-s: 'Instrument Serif', serif;
+  --ff-m: 'JetBrains Mono', monospace;
+
+  --pad:  96px;
+  --gutter: 64px;
+}
+
+/* ── Bricolage display scale ── */
+.t-wordmark   { font-family:var(--ff-g);font-size:300px;font-weight:800;line-height:.82;letter-spacing:-.04em; }
+.t-closer     { font-family:var(--ff-g);font-size:320px;font-weight:700;line-height:.82;letter-spacing:-.05em; }
+.t-stat       { font-family:var(--ff-g);font-size:540px;font-weight:700;line-height:.78;letter-spacing:-.06em; }
+.t-display-xl { font-family:var(--ff-g);font-size:84px; font-weight:700;line-height:.95;letter-spacing:-.02em; }
+.t-display-lg { font-family:var(--ff-g);font-size:76px; font-weight:700;line-height:.95;letter-spacing:-.02em; }
+.t-lede       { font-family:var(--ff-g);font-size:56px; font-weight:500;line-height:1.05;letter-spacing:-.02em; }
+.t-qhead      { font-family:var(--ff-g);font-size:56px; font-weight:600;line-height:1.0; letter-spacing:-.02em; }
+.t-card-title { font-family:var(--ff-g);font-size:40px; font-weight:600;line-height:1.0; letter-spacing:-.02em; }
+.t-body-lg    { font-family:var(--ff-g);font-size:28px; font-weight:400;line-height:1.45; }
+.t-body-md    { font-family:var(--ff-g);font-size:26px; font-weight:400;line-height:1.4; }
+.t-body-sm    { font-family:var(--ff-g);font-size:24px; font-weight:400;line-height:1.45; }
+
+/* em in grotesque headlines → Instrument Serif italic */
+.t-display-xl em,.t-display-lg em,.t-lede em,.t-qhead em {
+  font-family:var(--ff-s);font-style:italic;font-weight:400;
+}
+
+/* ── Instrument Serif scale ── */
+.t-chapter    { font-family:var(--ff-s);font-size:240px;font-weight:400;line-height:.9; }
+.t-quote-mark { font-family:var(--ff-s);font-size:200px;font-weight:400;line-height:.6; }
+.t-signature  { font-family:var(--ff-s);font-size:64px; font-weight:400;line-height:1.0; }
+.t-serif-sub  { font-family:var(--ff-s);font-size:48px; font-weight:400;line-height:1.1; }
+.t-stat-unit  { font-family:var(--ff-s);font-size:220px;font-weight:400;line-height:1.0; }
+.t-chart-title{ font-family:var(--ff-s);font-size:40px; font-weight:400;line-height:1.0; }
+
+/* ── JetBrains Mono labels ── */
+.t-label      { font-family:var(--ff-m);font-size:24px;font-weight:400;letter-spacing:.15em;text-transform:uppercase;line-height:1; }
+.t-label-wide { font-family:var(--ff-m);font-size:24px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;line-height:1; }
+.t-label-mid  { font-family:var(--ff-m);font-size:24px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;line-height:1; }
+.t-footer-f   { font-family:var(--ff-m);font-size:16px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;opacity:.75; }
+
+/* ── Pill ── */
+.pill {
+  display:inline-block;border-radius:999px;
+  padding:.35em .9em;
+  font-family:var(--ff-g);font-weight:500;line-height:1;
+}
+.pill-lg {
+  display:inline-block;border-radius:999px;
+  padding:16px 38px;font-family:var(--ff-g);font-size:44px;font-weight:500;line-height:1;
+}
+.pill-sm {
+  display:inline-block;border-radius:999px;
+  padding:10px 26px;font-family:var(--ff-m);font-size:22px;font-weight:400;letter-spacing:.10em;text-transform:uppercase;
+}
+.pill-dark  { background:var(--burg);color:var(--pink); }
+.pill-light { background:var(--butter);color:var(--burg); }
+.pill-pink  { background:var(--pink);color:var(--burg); }
+
+/* ── Value cards ── */
+.vcard { border-radius:28px;padding:28px 28px 30px;height:340px;display:flex;flex-direction:column;gap:0; }
+.vcard-dark  { background:var(--burg);color:var(--butter); }
+.vcard-light { background:var(--butter);color:var(--burg); }
+
+/* ── Chart card ── */
+.chart-card { border-radius:32px;background:var(--butter);color:var(--burg);padding:48px 48px 56px; }
+
+/* ── Dark divider (on burgundy surfaces) ── */
+.dark-div { border-top:1px solid rgba(246,237,220,.25); }
+
+/* ── Section marker ── */
+.sec-marker { font-family:var(--ff-m);font-size:24px;font-weight:400;letter-spacing:.15em;text-transform:uppercase;opacity:.7; }
+
+/* ── Footer chrome ── */
+.footer-chrome {
+  position:absolute;left:64px;right:64px;bottom:36px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+
+/* ── Nav dots ── */
+.nav-dots {
+  position:fixed;right:22px;top:50%;transform:translateY(-50%);
+  z-index:9999;display:flex;flex-direction:column;gap:9px;
+}
+.nav-dot {
+  width:10px;height:10px;border-radius:999px;border:2px solid var(--butter);
+  background:transparent;cursor:pointer;transition:transform .2s,background .2s;
+}
+.nav-dot.on{ background:var(--butter);transform:scale(1.3); }
+
+/* ── Counter ── */
+.counter {
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:9999;background:var(--burg);color:var(--butter);
+  font-family:var(--ff-m);font-size:15px;font-weight:400;
+  letter-spacing:.12em;text-transform:uppercase;padding:7px 22px;border-radius:999px;
+}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="stage">
+
+
+<!-- ════════════════════════════════════
+     SLIDE 01 — COVER  (burgundy)
+     ════════════════════════════════════ -->
+<section class="slide active" id="s1" style="background:var(--burg);padding:var(--pad) var(--gutter);">
+
+  <!-- Masthead -->
+  <div style="position:absolute;top:56px;left:80px;right:80px;display:flex;justify-content:space-between;">
+    <div class="t-label-wide" style="color:var(--butter);">Tubelens</div>
+    <div class="t-label-wide" style="color:var(--butter);">Full-Stack Project · 2026</div>
+  </div>
+
+  <!-- Main cover block -->
+  <div style="position:absolute;left:80px;right:80px;top:140px;bottom:130px;
+              display:flex;flex-direction:column;justify-content:center;gap:0;">
+
+    <!-- Section tag -->
+    <div class="sec-marker" style="color:var(--pink);margin-bottom:28px;">§ 00 — WatchDNA Series</div>
+
+    <!-- Wordmark -->
+    <div class="t-wordmark" style="color:var(--butter);margin-bottom:20px;">Tubelens</div>
+
+    <!-- Instrument Serif italic subtitle -->
+    <div class="t-signature" style="color:var(--pink);font-style:italic;margin-bottom:36px;">
+      "You watch differently than you think you do."
+    </div>
+
+    <!-- Lede -->
+    <div class="t-lede" style="color:var(--butter);max-width:1200px;margin-bottom:48px;">
+      Upload your Google Takeout. Discover <em>your actual YouTube self</em> — powered by AI.
+    </div>
+
+    <!-- Tag pills -->
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <span class="pill-lg pill-dark">AI Insights</span>
+      <span class="pill-lg" style="background:var(--pink);color:var(--burg);">Google Takeout</span>
+      <span class="pill-lg pill-light">Visual Dashboard</span>
+      <span class="pill-lg pill-dark">Privacy-First</span>
+    </div>
+  </div>
+
+  <!-- Footer chrome -->
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--butter);">watch-dna.vercel.app</div>
+    <div class="t-footer-f" style="color:var(--butter);">Next.js · Claude Haiku · PostgreSQL · Vercel</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 02 — § 01 THE PROBLEM  (split: butter + burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s2" style="display:grid;grid-template-columns:1fr 1fr;">
+
+  <!-- Left: butter panel -->
+  <div style="background:var(--butter);padding:88px 64px 80px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="sec-marker" style="color:var(--burg);">§ 01 — The Problem</div>
+
+    <div>
+      <div class="t-display-xl" style="color:var(--burg);margin-bottom:32px;">
+        500+ subscriptions.<br><em>Same 10 channels.</em>
+      </div>
+      <div class="t-body-lg" style="color:var(--burg);max-width:680px;">
+        YouTube gives you a subscription button but no mirror. Most users have never seen what they actually watch — only what they <em>think</em> they watch.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <span class="pill-sm pill-dark">Subscription drift</span>
+      <span class="pill-sm pill-dark">Binge blindness</span>
+      <span class="pill-sm pill-dark">No self-data</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="t-footer-f" style="color:var(--burg);opacity:.6;">§ 01 · The Problem · Tubelens</div>
+  </div>
+
+  <!-- Right: burgundy panel -->
+  <div style="background:var(--burg);padding:88px 64px 80px;display:flex;flex-direction:column;justify-content:center;gap:0;">
+    <div class="t-label-wide" style="color:var(--pink);margin-bottom:32px;">The gap</div>
+    <div style="display:flex;flex-direction:column;gap:28px;">
+
+      <div class="dark-div" style="padding-top:28px;">
+        <div class="t-serif-sub" style="color:var(--pink);margin-bottom:10px;font-style:italic;">Subscribed to</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="t-lede" style="color:var(--butter);">547 channels</div>
+          <div class="t-label" style="color:var(--butter);opacity:.6;">avg. user</div>
+        </div>
+      </div>
+
+      <div class="dark-div" style="padding-top:28px;">
+        <div class="t-serif-sub" style="color:var(--pink);margin-bottom:10px;font-style:italic;">Actually watched</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="t-lede" style="color:var(--butter);">23 channels</div>
+          <div class="t-label" style="color:var(--butter);opacity:.6;">regularly</div>
+        </div>
+      </div>
+
+      <div class="dark-div" style="padding-top:28px;">
+        <div class="t-serif-sub" style="color:var(--pink);margin-bottom:10px;font-style:italic;">Peak binge time</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="t-lede" style="color:var(--butter);">11 pm – 1 am</div>
+          <div class="t-label" style="color:var(--butter);opacity:.6;">unknown</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 03 — CHAPTER OPENER: THE SOLUTION  (burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s3" style="display:grid;grid-template-columns:1fr 1fr;">
+
+  <!-- Left: big chapter numeral -->
+  <div style="background:var(--burg);display:flex;align-items:flex-end;padding:80px 60px;position:relative;overflow:hidden;">
+    <!-- Chapter numeral behind -->
+    <div class="t-chapter" style="color:var(--pink);opacity:.25;position:absolute;left:-20px;bottom:-40px;line-height:.85;font-style:italic;">I</div>
+    <!-- Eyebrow -->
+    <div style="position:absolute;top:80px;left:80px;">
+      <div class="t-label" style="color:var(--pink);">§ 02 — The Solution</div>
+    </div>
+    <!-- Big numeral foreground -->
+    <div class="t-chapter" style="color:var(--pink);font-style:italic;z-index:1;">1</div>
+  </div>
+
+  <!-- Right: solution statement on butter -->
+  <div style="background:var(--butter);padding:88px 64px;display:flex;flex-direction:column;justify-content:center;gap:32px;">
+    <div class="sec-marker" style="color:var(--burg);">§ 02 — The Solution</div>
+    <div class="t-display-lg" style="color:var(--burg);">
+      Your Takeout file.<br><em>Your whole story.</em>
+    </div>
+    <div class="t-body-lg" style="color:var(--burg);max-width:680px;">
+      Upload one zip from Google Takeout. Tubelens parses every watch event, subscription, like, comment, and search — then surfaces what your data says about you.
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <span class="pill-sm" style="background:var(--burg);color:var(--butter);">No API keys</span>
+      <span class="pill-sm" style="background:var(--burg);color:var(--butter);">No scraping</span>
+      <span class="pill-sm" style="background:var(--burg);color:var(--butter);">Your data stays yours</span>
+    </div>
+    <div class="t-footer-f" style="color:var(--burg);">§ 02 · The Solution · Tubelens</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 04 — § 03 CORE FEATURES  (butter bg + 6 value cards)
+     ════════════════════════════════════ -->
+<section class="slide" id="s4" style="background:var(--butter);padding:72px var(--pad) 70px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:32px;">
+    <div class="sec-marker" style="color:var(--burg);">§ 03 — Core Features</div>
+    <div class="t-label" style="color:var(--burg);">Six features · Tubelens</div>
+  </div>
+
+  <!-- 6 value cards: alternating dark / light -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+
+    <!-- 1 dark -->
+    <div class="vcard vcard-dark" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--pink);margin-bottom:20px;">01</div>
+      <div class="t-card-title" style="color:var(--butter);margin-bottom:14px;">One-click Import</div>
+      <div class="t-body-sm" style="color:var(--butter);opacity:.85;margin-top:auto;">
+        Drop your Google Takeout .zip. Tubelens extracts watch history, subscriptions, likes, playlists, comments, and searches — zero configuration.
+      </div>
+    </div>
+
+    <!-- 2 light -->
+    <div class="vcard vcard-light" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--burg);opacity:.6;margin-bottom:20px;">02</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:14px;">Visual Dashboard</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;margin-top:auto;">
+        Calendar heatmap, KPI cards, and top-channels ranking built with Recharts and Server Components. Dark-mode native.
+      </div>
+    </div>
+
+    <!-- 3 dark -->
+    <div class="vcard vcard-dark" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--pink);margin-bottom:20px;">03</div>
+      <div class="t-card-title" style="color:var(--butter);margin-bottom:14px;">AI-Powered Insights</div>
+      <div class="t-body-sm" style="color:var(--butter);opacity:.85;margin-top:auto;">
+        Claude Haiku analyzes your patterns and surfaces binge sessions, topic clusters, and time-of-day habits in plain language.
+      </div>
+    </div>
+
+    <!-- 4 light -->
+    <div class="vcard vcard-light" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--burg);opacity:.6;margin-bottom:20px;">04</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:14px;">Subscription Mismatch</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;margin-top:auto;">
+        Cross-reference what you subscribe to vs. what you actually watch. Surfaces channels you should unsubscribe from.
+      </div>
+    </div>
+
+    <!-- 5 dark -->
+    <div class="vcard vcard-dark" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--pink);margin-bottom:20px;">05</div>
+      <div class="t-card-title" style="color:var(--butter);margin-bottom:14px;">History Explorer</div>
+      <div class="t-body-sm" style="color:var(--butter);opacity:.85;margin-top:auto;">
+        Filterable, searchable watch history with enriched video and channel metadata from YouTube Data API v3.
+      </div>
+    </div>
+
+    <!-- 6 light -->
+    <div class="vcard vcard-light" style="height:auto;padding:32px 30px 30px;">
+      <div class="t-label" style="color:var(--burg);opacity:.6;margin-bottom:20px;">06</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:14px;">Privacy-First</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;margin-top:auto;">
+        All data lives in your own Neon Postgres instance, scoped to your login. Nothing is shared. Delete any time.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--burg);">§ 03 · Core Features</div>
+    <div class="t-footer-f" style="color:var(--burg);">Tubelens · watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 05 — § 04 HOW IT WORKS  (burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s5" style="background:var(--burg);padding:80px var(--pad) 90px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:36px;">
+    <div class="sec-marker" style="color:var(--pink);">§ 04 — How It Works</div>
+    <div class="t-label" style="color:var(--butter);">5 steps · Tubelens</div>
+  </div>
+
+  <div class="t-display-lg" style="color:var(--butter);margin-bottom:40px;">
+    From <em>raw export</em> to <em>self-knowledge</em>
+  </div>
+
+  <!-- 5 steps in a row -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-bottom:36px;">
+
+    <div style="border-radius:28px;background:var(--butter);color:var(--burg);padding:28px 24px;">
+      <div class="t-chapter" style="font-size:80px;color:var(--burg);margin-bottom:12px;font-style:italic;">1</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:10px;">Export</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;">Go to Google Takeout → select YouTube → download .zip archive.</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--pink);color:var(--burg);padding:28px 24px;">
+      <div class="t-chapter" style="font-size:80px;color:var(--burg);margin-bottom:12px;font-style:italic;">2</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:10px;">Upload</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;">Drop the zip into Tubelens. JSZip + PapaParse + Cheerio extract every CSV and HTML file.</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--butter);color:var(--burg);padding:28px 24px;">
+      <div class="t-chapter" style="font-size:80px;color:var(--burg);margin-bottom:12px;font-style:italic;">3</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:10px;">Enrich</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;">Route Handlers call YouTube Data API v3 to enrich channels and videos with metadata.</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--pink);color:var(--burg);padding:28px 24px;">
+      <div class="t-chapter" style="font-size:80px;color:var(--burg);margin-bottom:12px;font-style:italic;">4</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:10px;">Analyze</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;">Claude Haiku generates Insight records — binge patterns, topic clusters, peak hours.</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--butter);color:var(--burg);padding:28px 24px;">
+      <div class="t-chapter" style="font-size:80px;color:var(--burg);margin-bottom:12px;font-style:italic;">5</div>
+      <div class="t-card-title" style="color:var(--burg);margin-bottom:10px;">Discover</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;">Server Components render your dashboard — no client-side fetch, instant data on load.</div>
+    </div>
+  </div>
+
+  <!-- Timeline ribbon -->
+  <div style="background:var(--butter);border-radius:999px;padding:20px 44px;display:flex;gap:48px;align-items:center;">
+    <div class="t-label" style="color:var(--burg);">Takeout .zip</div>
+    <div style="color:var(--burg);font-size:28px;">→</div>
+    <div class="t-label" style="color:var(--burg);">Prisma / Neon</div>
+    <div style="color:var(--burg);font-size:28px;">→</div>
+    <div class="t-label" style="color:var(--burg);">YouTube API v3</div>
+    <div style="color:var(--burg);font-size:28px;">→</div>
+    <div class="t-label" style="color:var(--burg);">Claude Haiku</div>
+    <div style="color:var(--burg);font-size:28px;">→</div>
+    <div class="t-label" style="color:var(--burg);">Dashboard</div>
+  </div>
+
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--butter);">§ 04 · How It Works</div>
+    <div class="t-footer-f" style="color:var(--butter);">Tubelens · watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 06 — § 05 AI INSIGHTS  (split: butter / burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s6" style="display:grid;grid-template-columns:1fr 1fr;">
+
+  <!-- Left: butter with big quote mark -->
+  <div style="background:var(--butter);padding:80px 64px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="sec-marker" style="color:var(--burg);">§ 05 — AI Insights</div>
+
+    <div style="position:relative;">
+      <!-- Large quote mark -->
+      <div class="t-quote-mark" style="color:var(--pink);position:absolute;top:-80px;left:-20px;opacity:.6;">"</div>
+      <div class="t-qhead" style="color:var(--burg);position:relative;z-index:1;padding-top:80px;">
+        You've watched<br><em>947 videos</em> from<br>just 3 channels this year.
+      </div>
+    </div>
+
+    <div>
+      <div class="t-body-lg" style="color:var(--burg);margin-bottom:16px;">
+        — Claude Haiku insight report, generated from your Takeout data
+      </div>
+      <div class="t-footer-f" style="color:var(--burg);">§ 05 · AI Insights · Tubelens</div>
+    </div>
+  </div>
+
+  <!-- Right: burgundy with insight breakdown -->
+  <div style="background:var(--burg);padding:80px 64px;display:flex;flex-direction:column;justify-content:center;gap:0;">
+    <div class="t-label-wide" style="color:var(--pink);margin-bottom:36px;">What Claude surfaces</div>
+
+    <div class="dark-div" style="padding:24px 0;">
+      <div class="t-chart-title" style="color:var(--pink);margin-bottom:8px;">Binge Sessions</div>
+      <div class="t-body-md" style="color:var(--butter);">Clusters of 5+ consecutive videos within 2 hours — how often, what topics, which time of day.</div>
+    </div>
+
+    <div class="dark-div" style="padding:24px 0;">
+      <div class="t-chart-title" style="color:var(--pink);margin-bottom:8px;">Topic Drift</div>
+      <div class="t-body-md" style="color:var(--butter);">How your interests shifted month-by-month. "You went from cooking in Jan to DevOps by March."</div>
+    </div>
+
+    <div class="dark-div" style="padding:24px 0;">
+      <div class="t-chart-title" style="color:var(--pink);margin-bottom:8px;">Subscription Mismatch</div>
+      <div class="t-body-md" style="color:var(--butter);">Channels you subscribed to but never returned to watch — unsubscribe candidates.</div>
+    </div>
+
+    <div class="dark-div" style="padding:24px 0;">
+      <div class="t-chart-title" style="color:var(--pink);margin-bottom:8px;">Peak Hours</div>
+      <div class="t-body-md" style="color:var(--butter);">Your heaviest watch windows by hour of day, day of week, and month of year.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 07 — § 06 DASHBOARD  (burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s7" style="background:var(--burg);padding:80px var(--pad) 90px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:40px;">
+    <div class="sec-marker" style="color:var(--pink);">§ 06 — Dashboard</div>
+    <div class="t-label" style="color:var(--butter);">Visual Analytics · Tubelens</div>
+  </div>
+
+  <div class="t-display-lg" style="color:var(--butter);margin-bottom:44px;">
+    Four views. <em>One picture of you.</em>
+  </div>
+
+  <!-- 4 large cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+
+    <div style="border-radius:28px;background:var(--butter);padding:32px 28px;display:flex;flex-direction:column;gap:16px;">
+      <div class="t-chart-title" style="color:var(--burg);">Calendar Heatmap</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;flex:1;">
+        Every day you watched something — color-coded by volume. See your binge weeks at a glance.
+      </div>
+      <!-- Fake heatmap cells -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.15;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.5;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.9;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.3;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.7;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.15;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.85;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.6;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.15;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.4;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.95;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.2;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.55;"></div>
+        <div style="height:14px;border-radius:3px;background:var(--burg);opacity:.3;"></div>
+      </div>
+      <div class="t-label-mid" style="color:var(--burg);font-size:16px;">Recharts · Server Component</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--pink);padding:32px 28px;display:flex;flex-direction:column;gap:16px;">
+      <div class="t-chart-title" style="color:var(--burg);">Top Channels</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;flex:1;">
+        Ranked by total watch time vs. by video count — the two lists rarely agree.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:rgba(122,31,53,.2);border-radius:999px;height:10px;width:95%;"></div>
+        <div style="background:rgba(122,31,53,.2);border-radius:999px;height:10px;width:72%;"></div>
+        <div style="background:rgba(122,31,53,.2);border-radius:999px;height:10px;width:58%;"></div>
+        <div style="background:rgba(122,31,53,.2);border-radius:999px;height:10px;width:40%;"></div>
+      </div>
+      <div class="t-label-mid" style="color:var(--burg);font-size:16px;">Prisma · Neon · Next.js</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--butter);padding:32px 28px;display:flex;flex-direction:column;gap:16px;">
+      <div class="t-chart-title" style="color:var(--burg);">KPI Cards</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;flex:1;">
+        Total hours watched, videos seen, channels visited, peak binge day — your year in four numbers.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:var(--burg);border-radius:12px;padding:10px 12px;">
+          <div class="t-label-mid" style="color:var(--butter);font-size:14px;margin-bottom:4px;">Hours</div>
+          <div style="font-family:var(--ff-s);font-size:32px;color:var(--pink);font-style:italic;">847</div>
+        </div>
+        <div style="background:var(--burg);border-radius:12px;padding:10px 12px;">
+          <div class="t-label-mid" style="color:var(--butter);font-size:14px;margin-bottom:4px;">Videos</div>
+          <div style="font-family:var(--ff-s);font-size:32px;color:var(--pink);font-style:italic;">2.4K</div>
+        </div>
+      </div>
+      <div class="t-label-mid" style="color:var(--burg);font-size:16px;">Server Components</div>
+    </div>
+
+    <div style="border-radius:28px;background:var(--pink);padding:32px 28px;display:flex;flex-direction:column;gap:16px;">
+      <div class="t-chart-title" style="color:var(--burg);">Subscriptions Gap</div>
+      <div class="t-body-sm" style="color:var(--burg);opacity:.8;flex:1;">
+        Channels you follow vs. channels you actually return to. The gap is always larger than you expect.
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:70%;height:12px;background:var(--burg);border-radius:999px;opacity:.8;"></div>
+        <div class="t-label-mid" style="color:var(--burg);font-size:14px;">Subscribed</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:14%;height:12px;background:var(--burg);border-radius:999px;opacity:.8;"></div>
+        <div class="t-label-mid" style="color:var(--burg);font-size:14px;">Watched</div>
+      </div>
+      <div class="t-label-mid" style="color:var(--burg);font-size:16px;">Recharts · YT API v3</div>
+    </div>
+  </div>
+
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--butter);">§ 06 · Dashboard</div>
+    <div class="t-footer-f" style="color:var(--butter);">Tubelens · watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 08 — § 07 TECH STACK  (split: butter / burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s8" style="display:grid;grid-template-columns:1fr 1fr;">
+
+  <!-- Left: butter — stack list -->
+  <div style="background:var(--butter);padding:80px 64px;display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="sec-marker" style="color:var(--burg);">§ 07 — Tech Stack</div>
+
+    <div>
+      <div class="t-display-lg" style="color:var(--burg);margin-bottom:36px;">Built to <em>last.</em></div>
+
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Framework</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">Next.js 14 · App Router</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Database</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">PostgreSQL · Neon · Prisma 7</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">AI</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">Claude Haiku (Anthropic)</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Auth</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">NextAuth v4 · Google OAuth</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Parsing</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">JSZip · PapaParse · Cheerio</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Charts</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">Recharts · shadcn/ui</div>
+        </div>
+        <div class="dark-div" style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;border-color:rgba(122,31,53,.2);">
+          <div class="t-label" style="color:var(--burg);">Storage</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">Vercel Blob</div>
+        </div>
+        <div style="padding:20px 0;display:flex;justify-content:space-between;align-items:baseline;">
+          <div class="t-label" style="color:var(--burg);">Deploy</div>
+          <div class="t-body-md" style="color:var(--burg);font-weight:600;">Vercel · Edge-compatible</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-footer-f" style="color:var(--burg);">§ 07 · Tech Stack · Tubelens</div>
+  </div>
+
+  <!-- Right: burgundy — data models -->
+  <div style="background:var(--burg);padding:80px 64px;display:flex;flex-direction:column;justify-content:center;gap:28px;">
+    <div class="t-label-wide" style="color:var(--pink);">Key Prisma Models</div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:12px;">
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">User</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">TakeoutFile</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">WatchEvent</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Channel</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Video</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Subscription</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">SearchEvent</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Comment</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">LikedVideo</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Playlist</span>
+      <span class="pill-sm" style="background:var(--pink);color:var(--burg);">Insight</span>
+    </div>
+
+    <div class="dark-div" style="padding-top:28px;">
+      <div class="t-serif-sub" style="color:var(--pink);margin-bottom:12px;font-style:italic;">Data flow</div>
+      <div class="t-body-md" style="color:var(--butter);line-height:1.6;">
+        Takeout .zip<br>
+        <span style="opacity:.5;">↓</span><br>
+        JSZip + PapaParse + Cheerio<br>
+        <span style="opacity:.5;">↓</span><br>
+        Prisma → Neon Postgres<br>
+        <span style="opacity:.5;">↓</span><br>
+        YouTube API v3 enrichment<br>
+        <span style="opacity:.5;">↓</span><br>
+        Claude Haiku → Insight records<br>
+        <span style="opacity:.5;">↓</span><br>
+        Server Components → Dashboard
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 09 — § 08 STATS / STATUS  (butter)
+     ════════════════════════════════════ -->
+<section class="slide" id="s9" style="background:var(--butter);padding:80px var(--pad) 90px;">
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:40px;">
+    <div class="sec-marker" style="color:var(--burg);">§ 08 — Status &amp; Scope</div>
+    <div class="t-label" style="color:var(--burg);">V1 Target · Tubelens</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;height:780px;">
+
+    <!-- Left: big stat + context -->
+    <div style="display:flex;flex-direction:column;justify-content:space-between;">
+      <div>
+        <div class="t-display-xl" style="color:var(--burg);margin-bottom:20px;">
+          <em>One</em> file.<br>Your entire<br>YouTube life.
+        </div>
+      </div>
+
+      <!-- 3 KPI row -->
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="border-top:2px solid rgba(122,31,53,.2);padding:24px 0;display:flex;justify-content:space-between;align-items:baseline;">
+          <div style="font-family:var(--ff-s);font-size:72px;color:var(--burg);font-style:italic;">11</div>
+          <div style="text-align:right;">
+            <div class="t-card-title" style="color:var(--burg);">Prisma models</div>
+            <div class="t-body-sm" style="color:var(--burg);opacity:.6;">User · Watch · Channel · Video · More</div>
+          </div>
+        </div>
+        <div style="border-top:2px solid rgba(122,31,53,.2);padding:24px 0;display:flex;justify-content:space-between;align-items:baseline;">
+          <div style="font-family:var(--ff-s);font-size:72px;color:var(--burg);font-style:italic;">6</div>
+          <div style="text-align:right;">
+            <div class="t-card-title" style="color:var(--burg);">Data sources</div>
+            <div class="t-body-sm" style="color:var(--burg);opacity:.6;">History · Subs · Likes · Playlists · Comments · Search</div>
+          </div>
+        </div>
+        <div style="border-top:2px solid rgba(122,31,53,.2);padding:24px 0;display:flex;justify-content:space-between;align-items:baseline;">
+          <div style="font-family:var(--ff-s);font-size:72px;color:var(--burg);font-style:italic;">∞</div>
+          <div style="text-align:right;">
+            <div class="t-card-title" style="color:var(--burg);">Privacy guarantee</div>
+            <div class="t-body-sm" style="color:var(--burg);opacity:.6;">Your data. Your DB. Your Vercel. Zero sharing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: roadmap chart card -->
+    <div class="chart-card" style="display:flex;flex-direction:column;gap:28px;">
+      <div class="t-chart-title" style="color:var(--burg);">Roadmap</div>
+
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <div class="t-body-md" style="color:var(--burg);font-weight:600;">V1 — Core Dashboard</div>
+            <div class="t-label" style="color:var(--burg);">4 weeks</div>
+          </div>
+          <div style="height:10px;border-radius:999px;background:rgba(122,31,53,.15);overflow:hidden;">
+            <div style="height:100%;width:80%;background:var(--burg);border-radius:999px;"></div>
+          </div>
+          <div class="t-body-sm" style="color:var(--burg);opacity:.7;margin-top:6px;">Import · Heatmap · KPI cards · Top channels · AI insights</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <div class="t-body-md" style="color:var(--burg);font-weight:600;">V2 — Deep Analytics</div>
+            <div class="t-label" style="color:var(--burg);">8 weeks</div>
+          </div>
+          <div style="height:10px;border-radius:999px;background:rgba(122,31,53,.15);overflow:hidden;">
+            <div style="height:100%;width:30%;background:var(--burg);border-radius:999px;opacity:.5;"></div>
+          </div>
+          <div class="t-body-sm" style="color:var(--burg);opacity:.7;margin-top:6px;">Subscription mismatch · Topic drift timeline · Compare periods</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <div class="t-body-md" style="color:var(--burg);font-weight:600;">V3 — Social &amp; Export</div>
+            <div class="t-label" style="color:var(--burg);">TBD</div>
+          </div>
+          <div style="height:10px;border-radius:999px;background:rgba(122,31,53,.15);overflow:hidden;">
+            <div style="height:100%;width:5%;background:var(--burg);border-radius:999px;opacity:.3;"></div>
+          </div>
+          <div class="t-body-sm" style="color:var(--burg);opacity:.7;margin-top:6px;">Shareable "YouTube Wrapped" card · PDF export · Friends compare</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:auto;">
+        <span class="pill-sm" style="background:var(--burg);color:var(--butter);">In Development</span>
+        <span class="pill-sm" style="background:var(--burg);color:var(--butter);">Live Demo ↗</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--burg);">§ 08 · Status &amp; Scope</div>
+    <div class="t-footer-f" style="color:var(--burg);">Tubelens · watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     SLIDE 10 — COLOPHON  (burgundy)
+     ════════════════════════════════════ -->
+<section class="slide" id="s10" style="background:var(--burg);padding:80px var(--pad);">
+
+  <!-- Masthead -->
+  <div style="position:absolute;top:56px;left:80px;right:80px;display:flex;justify-content:space-between;">
+    <div class="t-label-wide" style="color:var(--butter);">Colophon</div>
+    <div class="t-label-wide" style="color:var(--butter);">Tubelens · 2026</div>
+  </div>
+
+  <!-- Closing content -->
+  <div style="position:absolute;left:80px;right:80px;top:140px;bottom:130px;
+              display:flex;flex-direction:column;justify-content:center;gap:0;">
+
+    <div class="sec-marker" style="color:var(--pink);margin-bottom:32px;">§ 09 — Closing</div>
+
+    <!-- Big closer text -->
+    <div class="t-closer" style="color:var(--butter);margin-bottom:32px;">Tubelens</div>
+
+    <!-- Signature italic -->
+    <div class="t-signature" style="color:var(--pink);font-style:italic;margin-bottom:40px;">
+      "Know yourself better. One export at a time."
+    </div>
+
+    <!-- Closing body -->
+    <div class="t-lede" style="color:var(--butter);max-width:1100px;margin-bottom:48px;">
+      A <em>full-stack analytics project</em> by Sarah Wang —<br>
+      part of the Digital Footprint series alongside Linknest.
+    </div>
+
+    <!-- Pills row -->
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Next.js 14</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Claude Haiku</span>
+      <span class="pill-sm" style="background:var(--pink);color:var(--burg);">PostgreSQL + Neon</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Prisma 7</span>
+      <span class="pill-sm" style="background:var(--pink);color:var(--burg);">Recharts</span>
+      <span class="pill-sm" style="background:var(--butter);color:var(--burg);">Vercel</span>
+    </div>
+  </div>
+
+  <!-- Footline -->
+  <div class="footer-chrome">
+    <div class="t-footer-f" style="color:var(--butter);">watch-dna.vercel.app</div>
+    <div class="t-footer-f" style="color:var(--butter);">sarahwang.dev · github.com/sarahwangy</div>
+  </div>
+</section>
+
+
+</main>
+</div>
+
+<!-- Nav dots -->
+<div class="nav-dots" id="navDots"></div>
+<!-- Counter -->
+<div class="counter" id="counter">1 / 10</div>
+
+<script>
+(function(){
+  const stage  = document.getElementById('stage');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const ctr    = document.getElementById('counter');
+  const dots   = document.getElementById('navDots');
+  let cur = 0;
+
+  function scale(){
+    const f = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+    const x = (window.innerWidth  - 1920*f)/2;
+    const y = (window.innerHeight - 1080*f)/2;
+    stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+  }
+  scale(); window.addEventListener('resize', scale);
+
+  slides.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'nav-dot';
+    d.addEventListener('click',()=>go(i));
+    dots.appendChild(d);
+  });
+  const dotEls = dots.querySelectorAll('.nav-dot');
+
+  function go(i){
+    i = Math.max(0,Math.min(i,slides.length-1));
+    slides.forEach((s,j)=>s.classList.toggle('active',j===i));
+    dotEls.forEach((d,j)=>d.classList.toggle('on',j===i));
+    cur = i;
+    ctr.textContent = `${i+1} / ${slides.length}`;
+  }
+  go(0);
+
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();go(cur+1);}
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+    if(e.key==='Home'){e.preventDefault();go(0);}
+    if(e.key==='End'){e.preventDefault();go(slides.length-1);}
+  });
+
+  let tx=0;
+  window.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>40){dx<0?go(cur+1):go(cur-1);}
+  },{passive:true});
+
+  let wl=false;
+  window.addEventListener('wheel',e=>{
+    if(wl)return;wl=true;setTimeout(()=>wl=false,700);
+    e.deltaY>0?go(cur+1):go(cur-1);
+  },{passive:true});
+})();
+</script>
+</body>
+</html>

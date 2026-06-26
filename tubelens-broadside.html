@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tubelens — Broadside</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ── Viewport / stage ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;}
+.slide{
+  position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;
+  visibility:hidden;opacity:0;pointer-events:none;
+  transition:opacity .45s cubic-bezier(.16,1,.3,1);
+}
+.slide.active{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+@media (prefers-reduced-motion:reduce){.slide{transition-duration:.01ms!important;}}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;}
+  .deck-viewport{position:static;overflow:visible;}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;}
+  .slide{position:relative;display:block!important;visibility:visible!important;
+         opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;}
+}
+
+/* ── Broadside palette ── */
+:root{
+  --ink:     #111111;
+  --ink-alt: #1A1A18;
+  --orange:  #E85D26;
+  --cream:   #F0ECE5;
+  --c-muted: #888880;
+  --c-hint:  #505048;
+  --border:  #282826;
+  /* on-orange overlays */
+  --oo-75:   rgba(17,17,17,.75);
+  --oo-55:   rgba(17,17,17,.55);
+  --oo-40:   rgba(17,17,17,.40);
+  --oo-20:   rgba(17,17,17,.20);
+
+  --ff-b: 'Barlow','Noto Sans SC',sans-serif;
+  --ff-m: 'IBM Plex Mono',monospace;
+
+  /* 1920×1080 fixed-stage sizes translated from vw/vh */
+  --display:    250px; /* 13vw */
+  --fl-title:   202px; /* 10.5vw */
+  --quote-mark: 192px; /* 10vw */
+  --h1:         144px; /* 7.5vw */
+  --fl-item:    144px; /* 7.5vw */
+  --stat-val:   106px; /* 5.5vw */
+  --h2:          86px; /* 4.5vw */
+  --quote-text:  73px; /* 3.8vw */
+  --h3:          54px; /* 2.8vw */
+  --lead:        31px; /* 1.6vw */
+  --body:        23px; /* 1.2vw */
+  --caption:     17px; /* 0.9vw */
+  --label:       14px; /* 0.72vw */
+  --bsnum:       21px; /* 1.1vw */
+
+  --pad-x:  106px;  /* 5.5vw */
+  --pad-y:   60px;  /* 5.5vh */
+  --gap-lg:  38px;  /* 3.5vh */
+  --gap-md:  22px;  /* 2vh   */
+  --gap-sm:  11px;  /* 1vh   */
+}
+
+/* ── Typography helpers ── */
+.t-display  { font-family:var(--ff-b);font-size:var(--display);  font-weight:900;line-height:.88;letter-spacing:-.04em; }
+.t-h1       { font-family:var(--ff-b);font-size:var(--h1);       font-weight:800;line-height:.9; letter-spacing:-.03em; }
+.t-h2       { font-family:var(--ff-b);font-size:var(--h2);       font-weight:700;line-height:1.1;letter-spacing:-.02em; }
+.t-h3       { font-family:var(--ff-b);font-size:var(--h3);       font-weight:600;line-height:1.2; }
+.t-lead     { font-family:var(--ff-b);font-size:var(--lead);     font-weight:400;line-height:1.5; }
+.t-body     { font-family:var(--ff-b);font-size:var(--body);     font-weight:400;line-height:1.6; }
+.t-caption  { font-family:var(--ff-b);font-size:var(--caption);  font-weight:400;line-height:1.5; }
+.t-stat     { font-family:var(--ff-b);font-size:var(--stat-val); font-weight:900;line-height:1.0; letter-spacing:-.04em; }
+.t-qt-mark  { font-family:var(--ff-b);font-size:var(--quote-mark);font-weight:900;line-height:.6; }
+.t-qt-text  { font-family:var(--ff-b);font-size:var(--quote-text);font-weight:700;line-height:1.15;letter-spacing:-.02em; }
+.t-label    { font-family:var(--ff-m);font-size:var(--label);    font-weight:500;letter-spacing:.14em;text-transform:uppercase;line-height:1; }
+.t-bsnum    { font-family:var(--ff-m);font-size:var(--bsnum);    font-weight:500;letter-spacing:.10em; }
+
+/* ── Dark register (content slides) ── */
+.dark { background:var(--ink);color:var(--cream); }
+
+/* ── Orange register (cover/chapter/end slides) ── */
+.orange { background:var(--orange);color:var(--ink); }
+
+/* ── Chrome bar (content slides only) ── */
+.chrome-top {
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:var(--gap-sm);
+  border-bottom:1px solid var(--border);
+  margin-bottom:var(--gap-md);
+}
+.chrome-bot {
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:var(--gap-sm);
+  border-top:1px solid var(--border);
+  margin-top:var(--gap-md);
+}
+.chrome-top-o {
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:var(--gap-sm);
+  border-bottom:1px solid var(--oo-20);
+  margin-bottom:var(--gap-md);
+}
+
+/* ── Kicker ── */
+.kicker { font-family:var(--ff-m);font-size:var(--label);font-weight:500;
+          letter-spacing:.14em;text-transform:uppercase;color:var(--orange); }
+.kicker-o { font-family:var(--ff-m);font-size:var(--label);font-weight:500;
+             letter-spacing:.14em;text-transform:uppercase;color:var(--oo-55); }
+
+/* ── Tag ── */
+.tag { font-family:var(--ff-m);font-size:var(--label);font-weight:500;
+       letter-spacing:.14em;text-transform:uppercase;color:var(--orange);
+       border:1px solid var(--orange);padding:.3em .8em;display:inline-block; }
+.tag-o { font-family:var(--ff-m);font-size:var(--label);font-weight:500;
+          letter-spacing:.14em;text-transform:uppercase;color:var(--oo-40);
+          border:1px solid var(--oo-40);padding:.3em .8em;display:inline-block; }
+
+/* ── Stub accent rule ── */
+.rule { width:36px;height:2px;background:var(--orange);flex-shrink:0; }
+.rule-o { width:36px;height:2px;background:var(--ink);flex-shrink:0; }
+.rule-full { width:100%;height:1px;background:var(--border); }
+.rule-full-o { width:100%;height:1px;background:var(--oo-20); }
+
+/* ── Stat card (top border only) ── */
+.stat-card {
+  border-top:1px solid var(--border);
+  padding-top:var(--gap-md);
+}
+.stat-card .t-stat { color:var(--orange); }
+.stat-card .note   { font-family:var(--ff-m);font-size:var(--label);font-weight:500;
+                      letter-spacing:.14em;text-transform:uppercase;color:var(--c-hint);margin-top:6px; }
+
+/* ── Bullet list ── */
+.blist { list-style:none;display:flex;flex-direction:column;gap:var(--gap-md); }
+.blist li {
+  font-family:var(--ff-b);font-size:var(--lead);font-weight:400;line-height:1.5;
+  color:var(--cream);padding-left:2em;position:relative;
+}
+.blist li::before {
+  content:'/';position:absolute;left:0;
+  font-family:var(--ff-m);font-weight:700;color:var(--orange);
+}
+
+/* ── Nav dots & counter ── */
+.nav-dots{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  z-index:9999;display:flex;gap:9px;
+}
+.nav-dot{
+  width:8px;height:8px;border-radius:50%;border:1px solid var(--cream);
+  background:transparent;cursor:pointer;transition:background .2s,transform .2s;
+}
+.nav-dot.on{background:var(--orange);border-color:var(--orange);transform:scale(1.3);}
+.counter{
+  position:fixed;bottom:20px;right:24px;z-index:9999;
+  font-family:var(--ff-m);font-size:13px;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--c-hint);
+}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="stage">
+
+
+<!-- ════════════════════════════════
+     SLIDE 01 — COVER  (orange)
+     ════════════════════════════════ -->
+<section class="slide active orange" id="s1"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;justify-content:space-between;">
+
+  <!-- Catalogue number top-left -->
+  <div class="t-bsnum" style="color:rgba(17,17,17,.45);position:absolute;top:var(--pad-y);left:var(--pad-x);">01/10</div>
+
+  <!-- Centre block -->
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--gap-lg);">
+    <div class="t-display" style="color:var(--ink);">tubelens</div>
+    <div class="t-h2" style="color:var(--oo-75);max-width:1100px;">
+      turn your youtube watch history into a personal analytics dashboard — powered by ai.
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:var(--gap-md);">
+      <span class="tag-o">Google Takeout</span>
+      <span class="tag-o">Claude Haiku</span>
+      <span class="tag-o">Next.js 14</span>
+      <span class="tag-o">watch-dna.vercel.app</span>
+    </div>
+  </div>
+
+  <!-- Bottom ── project label -->
+  <div class="t-label" style="color:var(--oo-55);">WatchDNA Series — Full-Stack Project 2026</div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 02 — CHAPTER 01  (orange)
+     ════════════════════════════════ -->
+<section class="slide orange" id="s2"
+         style="padding:var(--pad-y) var(--pad-x);display:grid;grid-template-columns:1fr 1fr;gap:0 80px;">
+
+  <!-- Left: big display title -->
+  <div style="display:flex;flex-direction:column;justify-content:space-between;">
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+      <div class="t-bsnum" style="color:rgba(17,17,17,.45);">02/10</div>
+      <div class="rule-o"></div>
+      <div class="kicker-o">Chapter 01</div>
+    </div>
+    <div class="t-display" style="color:var(--ink);margin-bottom:var(--gap-lg);">the<br>problem</div>
+  </div>
+
+  <!-- Right: 3 problem stats -->
+  <div style="display:flex;flex-direction:column;justify-content:center;gap:0;border-left:1px solid var(--oo-20);padding-left:80px;">
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:10px;">subscribed to</div>
+      <div style="font-family:var(--ff-b);font-size:var(--stat-val);font-weight:900;line-height:1;letter-spacing:-.04em;color:var(--ink);">547</div>
+      <div class="t-lead" style="color:var(--oo-75);margin-top:8px;">channels — avg per user</div>
+    </div>
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:10px;">actually watched</div>
+      <div style="font-family:var(--ff-b);font-size:var(--stat-val);font-weight:900;line-height:1;letter-spacing:-.04em;color:var(--ink);">23</div>
+      <div class="t-lead" style="color:var(--oo-75);margin-top:8px;">channels — regularly</div>
+    </div>
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:10px;">subscription retention</div>
+      <div style="font-family:var(--ff-b);font-size:var(--stat-val);font-weight:900;line-height:1;letter-spacing:-.04em;color:var(--ink);">4%</div>
+      <div class="t-lead" style="color:var(--oo-75);margin-top:8px;">of subscriptions revisited</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 03 — THE GAP (stats)  (dark)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s3"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+  <div class="chrome-top">
+    <div class="kicker">§ 01 — The Problem</div>
+    <div class="t-label" style="color:var(--c-hint);">03/10</div>
+  </div>
+
+  <div class="t-h2" style="color:var(--cream);margin-bottom:var(--gap-lg);">the gap is always larger than you expect</div>
+
+  <!-- 4 stat cards in a row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0 48px;flex:1;padding-top:var(--gap-md);">
+
+    <div class="stat-card">
+      <div class="t-stat">547</div>
+      <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">avg channels subscribed</div>
+      <div class="note">per active user</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="t-stat">23</div>
+      <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">channels actually watched</div>
+      <div class="note">regularly · last 12 months</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="t-stat" style="color:var(--c-muted);">4%</div>
+      <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">of subscriptions revisited</div>
+      <div class="note">subscription retention rate</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="t-stat">11 pm</div>
+      <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">peak binge window starts</div>
+      <div class="note">unknown to most users</div>
+    </div>
+
+  </div>
+
+  <div class="chrome-bot" style="margin-top:auto;">
+    <div class="t-label" style="color:var(--c-hint);">Tubelens / WatchDNA</div>
+    <div class="t-label" style="color:var(--c-hint);">watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 04 — COMPARE  (dark + orange panel)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s4" style="overflow:hidden;">
+
+  <!-- Left panel -->
+  <div style="position:absolute;left:0;top:0;width:960px;height:1080px;
+              padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+    <div class="chrome-top">
+      <div class="kicker">§ 01 — Compare</div>
+      <div class="t-label" style="color:var(--c-hint);">04/10</div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--gap-lg);">
+      <div class="t-h2" style="color:var(--cream);">what you subscribe to</div>
+      <div class="t-h1" style="color:var(--c-muted);letter-spacing:-.03em;line-height:.9;">547<br>channels</div>
+      <ul class="blist">
+        <li>built up over years of clicking "subscribe"</li>
+        <li>most never revisited after the first video</li>
+        <li>invisible accumulation — you never see the count</li>
+      </ul>
+    </div>
+
+    <div class="chrome-bot">
+      <div class="t-label" style="color:var(--c-hint);">Subscription drift</div>
+    </div>
+  </div>
+
+  <!-- 1px divider -->
+  <div style="position:absolute;left:959px;top:0;width:1px;height:1080px;background:var(--border);"></div>
+
+  <!-- Right panel — orange -->
+  <div style="position:absolute;right:0;top:0;width:961px;height:1080px;
+              background:var(--orange);
+              padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+    <div class="chrome-top-o">
+      <div class="kicker-o">what you actually watch</div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--gap-lg);">
+      <div class="t-h1" style="color:var(--ink);letter-spacing:-.03em;line-height:.9;">23<br>channels</div>
+      <div class="t-h2" style="color:var(--oo-75);">that's it. same ones, over and over.</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:var(--gap-md);">
+        <li style="font-family:var(--ff-b);font-size:var(--lead);color:var(--oo-75);padding-left:2em;position:relative;">
+          <span style="position:absolute;left:0;font-family:var(--ff-m);font-weight:700;color:var(--oo-40);">/</span>
+          tubelens maps the actual vs. subscribed
+        </li>
+        <li style="font-family:var(--ff-b);font-size:var(--lead);color:var(--oo-75);padding-left:2em;position:relative;">
+          <span style="position:absolute;left:0;font-family:var(--ff-m);font-weight:700;color:var(--oo-40);">/</span>
+          surfaces channels you should unfollow
+        </li>
+        <li style="font-family:var(--ff-b);font-size:var(--lead);color:var(--oo-75);padding-left:2em;position:relative;">
+          <span style="position:absolute;left:0;font-family:var(--ff-m);font-weight:700;color:var(--oo-40);">/</span>
+          zero api keys — just your takeout zip
+        </li>
+      </ul>
+    </div>
+
+    <div style="padding-top:var(--gap-sm);border-top:1px solid var(--oo-20);">
+      <div class="t-label" style="color:var(--oo-40);">Tubelens · the payoff</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 05 — CHAPTER 02 (orange)
+     ════════════════════════════════ -->
+<section class="slide orange" id="s5"
+         style="padding:var(--pad-y) var(--pad-x);display:grid;grid-template-columns:1fr 1fr;gap:0 80px;">
+
+  <!-- Left: big display title -->
+  <div style="display:flex;flex-direction:column;justify-content:space-between;">
+    <div style="display:flex;flex-direction:column;gap:var(--gap-md);">
+      <div class="t-bsnum" style="color:rgba(17,17,17,.45);">05/10</div>
+      <div class="rule-o"></div>
+      <div class="kicker-o">Chapter 02</div>
+    </div>
+    <div class="t-display" style="color:var(--ink);margin-bottom:var(--gap-lg);">the<br>solution</div>
+  </div>
+
+  <!-- Right: what tubelens does -->
+  <div style="display:flex;flex-direction:column;justify-content:center;gap:0;border-left:1px solid var(--oo-20);padding-left:80px;">
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:14px;">/ step one</div>
+      <div class="t-h3" style="color:var(--ink);margin-bottom:8px;">upload one zip</div>
+      <div class="t-body" style="color:var(--oo-75);">google takeout export — no api keys, no scraping, no setup.</div>
+    </div>
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:14px;">/ step two</div>
+      <div class="t-h3" style="color:var(--ink);margin-bottom:8px;">see the real picture</div>
+      <div class="t-body" style="color:var(--oo-75);">heatmap, top channels, kpi cards — your actual watch behaviour visualised.</div>
+    </div>
+    <div style="border-top:1px solid var(--oo-20);padding:var(--gap-lg) 0;">
+      <div class="t-label" style="color:var(--oo-40);margin-bottom:14px;">/ step three</div>
+      <div class="t-h3" style="color:var(--ink);margin-bottom:8px;">ai reads the patterns</div>
+      <div class="t-body" style="color:var(--oo-75);">claude haiku surfaces binge sessions, topic drift, and subscription mismatches in plain language.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 06 — FEATURES  (dark)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s6"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+  <div class="chrome-top">
+    <div class="kicker">§ 02 — Core Features</div>
+    <div class="t-label" style="color:var(--c-hint);">06/10</div>
+  </div>
+
+  <div class="t-h2" style="color:var(--cream);margin-bottom:var(--gap-lg);">six things tubelens does for you</div>
+
+  <!-- 2-column, 3 items each -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 80px;flex:1;">
+
+    <div style="display:flex;flex-direction:column;gap:var(--gap-lg);">
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 01</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">one-click import</div>
+        <div class="t-body" style="color:var(--c-muted);">drop your google takeout zip — watch history, subscriptions, likes, playlists, comments, searches extracted automatically.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 02</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">visual dashboard</div>
+        <div class="t-body" style="color:var(--c-muted);">calendar heatmap, kpi cards, and top-channel ranking. dark-mode native. built with recharts and server components.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 03</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">subscription mismatch</div>
+        <div class="t-body" style="color:var(--c-muted);">cross-reference what you subscribe to vs. what you actually watch. generates unsubscribe candidates automatically.</div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:var(--gap-lg);">
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 04</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">ai-powered insights</div>
+        <div class="t-body" style="color:var(--c-muted);">claude haiku surfaces binge sessions, topic clusters, and peak-hour habits. plain language. no hallucinations — your data only.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 05</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">history explorer</div>
+        <div class="t-body" style="color:var(--c-muted);">filterable, searchable watch history with enriched video and channel metadata from youtube data api v3.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);">
+        <div class="t-label" style="color:var(--orange);margin-bottom:8px;">/ 06</div>
+        <div class="t-h3" style="color:var(--cream);margin-bottom:8px;">privacy-first</div>
+        <div class="t-body" style="color:var(--c-muted);">all data lives in your own neon postgres instance, scoped to your login. nothing shared. delete any time.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="chrome-bot">
+    <div class="t-label" style="color:var(--c-hint);">Tubelens / WatchDNA</div>
+    <div class="t-label" style="color:var(--c-hint);">Next.js 14 · Claude Haiku · PostgreSQL</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 07 — AI PULL QUOTE  (dark)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s7"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+  <div class="chrome-top">
+    <div class="kicker">§ 03 — AI Insights</div>
+    <div class="t-label" style="color:var(--c-hint);">07/10</div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--gap-md);">
+
+    <!-- Opening quote mark -->
+    <div class="t-qt-mark" style="color:var(--orange);line-height:.6;">"</div>
+
+    <!-- Quote body -->
+    <div class="t-qt-text" style="color:var(--cream);max-width:78%;margin-top:var(--gap-sm);">
+      you've watched 947 videos from<br>
+      just 3 channels this year.
+    </div>
+
+    <!-- Attribution -->
+    <div style="margin-top:var(--gap-lg);display:flex;flex-direction:column;gap:6px;">
+      <div class="t-body" style="color:var(--cream);">— Claude Haiku insight report</div>
+      <div class="t-label" style="color:var(--c-hint);">Generated from your Google Takeout data · Anthropic Claude Haiku</div>
+    </div>
+
+  </div>
+
+  <div class="chrome-bot">
+    <div class="t-label" style="color:var(--c-hint);">What claude surfaces: binge sessions · topic drift · peak hours · subscription mismatch</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 08 — HOW IT WORKS  (dark)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s8"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+  <div class="chrome-top">
+    <div class="kicker">§ 04 — How It Works</div>
+    <div class="t-label" style="color:var(--c-hint);">08/10</div>
+  </div>
+
+  <div class="t-h2" style="color:var(--cream);margin-bottom:var(--gap-lg);">from raw export to self-knowledge in five steps</div>
+
+  <!-- 5-step grid -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0 40px;flex:1;padding-top:var(--gap-sm);">
+
+    <div style="border-top:2px solid var(--orange);padding-top:var(--gap-md);display:flex;flex-direction:column;gap:var(--gap-sm);">
+      <div class="t-stat" style="color:var(--orange);">01</div>
+      <div class="t-h3" style="color:var(--cream);">export</div>
+      <div class="t-body" style="color:var(--c-muted);">go to google takeout, select youtube, download the zip archive. one download, everything included.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);display:flex;flex-direction:column;gap:var(--gap-sm);">
+      <div class="t-stat" style="color:var(--c-hint);">02</div>
+      <div class="t-h3" style="color:var(--cream);">upload</div>
+      <div class="t-body" style="color:var(--c-muted);">drop the zip into tubelens. jszip + papaparse + cheerio extract every csv and html file automatically.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);display:flex;flex-direction:column;gap:var(--gap-sm);">
+      <div class="t-stat" style="color:var(--c-hint);">03</div>
+      <div class="t-h3" style="color:var(--cream);">enrich</div>
+      <div class="t-body" style="color:var(--c-muted);">route handlers call youtube data api v3 to enrich each channel and video with title, thumbnail, and category metadata.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);display:flex;flex-direction:column;gap:var(--gap-sm);">
+      <div class="t-stat" style="color:var(--c-hint);">04</div>
+      <div class="t-h3" style="color:var(--cream);">analyze</div>
+      <div class="t-body" style="color:var(--c-muted);">claude haiku processes your patterns and writes insight records — binge clusters, topic drift, peak hours, subscription mismatch.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:var(--gap-md);display:flex;flex-direction:column;gap:var(--gap-sm);">
+      <div class="t-stat" style="color:var(--c-hint);">05</div>
+      <div class="t-h3" style="color:var(--cream);">discover</div>
+      <div class="t-body" style="color:var(--c-muted);">next.js server components render your dashboard instantly — heatmap, top channels, kpi cards, ai insights panel.</div>
+    </div>
+
+  </div>
+
+  <div class="chrome-bot">
+    <div class="t-label" style="color:var(--c-hint);">Takeout .zip → Prisma/Neon → YouTube API v3 → Claude Haiku → Server Components</div>
+    <div class="t-label" style="color:var(--c-hint);">Tubelens</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 09 — TECH STACK  (dark)
+     ════════════════════════════════ -->
+<section class="slide dark" id="s9"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;">
+
+  <div class="chrome-top">
+    <div class="kicker">§ 05 — Tech Stack</div>
+    <div class="t-label" style="color:var(--c-hint);">09/10</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 80px;flex:1;">
+
+    <!-- Left: stack table -->
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <div class="t-h2" style="color:var(--cream);margin-bottom:var(--gap-lg);">the stack</div>
+
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Framework</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">Next.js 14 · App Router</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Runtime</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">React 18 · Server Components</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Database</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">PostgreSQL · Neon · Prisma 7</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">AI</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">Claude Haiku · Anthropic</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Auth</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">NextAuth v4 · Google OAuth</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Parsing</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">JSZip · PapaParse · Cheerio</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Charts</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">Recharts · shadcn/ui · Tailwind</div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding:var(--gap-md) 0;display:flex;justify-content:space-between;">
+          <div class="t-label" style="color:var(--orange);">Deploy</div>
+          <div class="t-body" style="color:var(--cream);font-weight:600;">Vercel · Edge-compatible</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: stat cards -->
+    <div style="display:flex;flex-direction:column;justify-content:center;gap:40px;">
+      <div class="t-h2" style="color:var(--cream);">by the numbers</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+        <div class="stat-card">
+          <div class="t-stat">11</div>
+          <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">Prisma models</div>
+          <div class="note">User · Watch · Channel · Video</div>
+        </div>
+        <div class="stat-card">
+          <div class="t-stat">6</div>
+          <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">data sources</div>
+          <div class="note">History · Subs · Likes · More</div>
+        </div>
+        <div class="stat-card">
+          <div class="t-stat">3</div>
+          <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">parsing libraries</div>
+          <div class="note">JSZip · PapaParse · Cheerio</div>
+        </div>
+        <div class="stat-card">
+          <div class="t-stat">V1</div>
+          <div class="t-body" style="color:var(--cream);margin-top:var(--gap-sm);">current status</div>
+          <div class="note">live at watch-dna.vercel.app</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chrome-bot">
+    <div class="t-label" style="color:var(--c-hint);">Tubelens / WatchDNA</div>
+    <div class="t-label" style="color:var(--c-hint);">watch-dna.vercel.app</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════
+     SLIDE 10 — END  (orange)
+     ════════════════════════════════ -->
+<section class="slide orange" id="s10"
+         style="padding:var(--pad-y) var(--pad-x);display:flex;flex-direction:column;justify-content:space-between;">
+
+  <div class="t-bsnum" style="color:rgba(17,17,17,.45);position:absolute;top:var(--pad-y);left:var(--pad-x);">10/10</div>
+
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:var(--gap-lg);">
+    <div class="t-display" style="color:var(--ink);line-height:.88;">know<br>yourself</div>
+    <div class="rule-full-o"></div>
+    <div class="t-lead" style="color:var(--oo-75);max-width:960px;">
+      one export. your whole youtube life — parsed, mapped, and held up as a mirror.
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:var(--gap-md);">
+      <span class="tag-o">watch-dna.vercel.app</span>
+      <span class="tag-o">WatchDNA Series 2026</span>
+    </div>
+  </div>
+
+  <div class="t-label" style="color:var(--oo-55);">Tubelens — Next.js 14 · Claude Haiku · PostgreSQL/Neon · Vercel</div>
+</section>
+
+
+</main>
+</div>
+
+<!-- Nav dots -->
+<div class="nav-dots" id="navDots"></div>
+<!-- Counter -->
+<div class="counter" id="counter">1 / 10</div>
+
+<script>
+(function(){
+  const stage  = document.getElementById('stage');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const ctr    = document.getElementById('counter');
+  const dots   = document.getElementById('navDots');
+  let cur = 0;
+
+  function scale(){
+    const f = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+    const x = (window.innerWidth  - 1920*f)/2;
+    const y = (window.innerHeight - 1080*f)/2;
+    stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+  }
+  scale(); window.addEventListener('resize', scale);
+
+  slides.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'nav-dot';
+    d.addEventListener('click',()=>go(i));
+    dots.appendChild(d);
+  });
+  const dotEls = dots.querySelectorAll('.nav-dot');
+
+  function go(i){
+    i = Math.max(0,Math.min(i,slides.length-1));
+    slides.forEach((s,j)=>s.classList.toggle('active',j===i));
+    dotEls.forEach((d,j)=>d.classList.toggle('on',j===i));
+    cur = i;
+    ctr.textContent = `${i+1} / ${slides.length}`;
+  }
+  go(0);
+
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown','Enter'].includes(e.key)){e.preventDefault();go(cur+1);}
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();go(cur-1);}
+    if(e.key==='Home'){e.preventDefault();go(0);}
+    if(e.key==='End'){e.preventDefault();go(slides.length-1);}
+  });
+
+  let tx=0;
+  window.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>40){dx<0?go(cur+1):go(cur-1);}
+  },{passive:true});
+
+  let wl=false;
+  window.addEventListener('wheel',e=>{
+    if(wl)return;wl=true;setTimeout(()=>wl=false,700);
+    e.deltaY>0?go(cur+1):go(cur-1);
+  },{passive:true});
+})();
+</script>
+</body>
+</html>
